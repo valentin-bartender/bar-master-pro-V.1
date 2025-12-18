@@ -116,33 +116,34 @@
 <audio id="audio-player" loop src="https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3"></audio>
 
 <script>
-  // --- ШОТЫ ---
+    // --- ОБЪЕКТ РЕЦЕПТОВ (Тот самый пропущенный блок) ---
+    const recipes = {
+        // --- ШОТЫ ---
         "B-52": { ing: {"Бейлис":20, "Кофейный ликер":20, "Апельсиновый ликер":20}, glass: "Shot", tool: "Layered", g: ["Нет"] },
         "Uncle Bob": { ing: {"Водка":30, "Сироп Гренадин":10, "Лимонный сок":10}, glass: "Shot", tool: "Shaker", g: ["Нет"] },
         "Fumari set": { ing: {"Водка":80, "Ананасовый сок":40, "Сироп Маракуйя":20, "Лимонный сок":10, "Мед":10}, glass: "Shot", tool: "Shaker", g: ["Нет"] },
 
-        // --- КЛАССИКА IBA (The Unforgettables) ---
+        // --- КЛАССИКА IBA ---
         "Negroni": { ing: {"Джин":30, "Кампари":30, "Мартини Россо":30}, glass: "Old Fashioned", tool: "Stir", g: ["Апельсин"] },
         "Old Fashioned": { ing: {"Бурбон":45, "Ангостура":2, "Сахар":5}, glass: "Old Fashioned", tool: "Stir", g: ["Цедра лимона"] },
-        "Dry Martini": { ing: {"Джин":60, "Сухой вермут":10}, glass: "Martini Glass", tool: "Stir", g: ["Лайм"] },
+        "Dry Martini": { ing: {"Джин":60, "Сухой вермут":10}, glass: "Martini Glass", tool: "Stir", g: ["Лимон"] },
         "Whiskey Sour": { ing: {"Бурбон":45, "Лимонный сок":30, "Сахар":15, "Белок":20}, glass: "Old Fashioned", tool: "Shaker", g: ["Лимон"] },
+        "Margarita": { ing: {"Текила":35, "Апельсиновый ликер":20, "Лайм":15}, glass: "Margarita Glass", tool: "Shaker", g: ["Соляная кромка"] },
+        "Bloody Mary": { ing: {"Водка":45, "Томатный сок":90, "Лимонный сок":15, "Ворчестер":2, "Табаско":2}, glass: "Highball", tool: "Build", g: ["Лимон"] },
+        "Daiquiri": { ing: {"Ром":45, "Лайм":25, "Сахар":15}, glass: "Martini Glass", tool: "Shaker", g: ["Нет"] },
         
-        // --- CONTEMPORARY CLASSICS ---
+        // --- ПОПУЛЯРНОЕ ---
         "Sex on the beach": { ing: {"Водка":40, "Персиковый ликер":20, "Клюквенный морс":40, "Ананасовый сок":40}, glass: "Highball", tool: "Build", g: ["Апельсин"] },
         "Mojito Classic": { ing: {"Ром":50, "Содовая":100, "Лайм":20, "Мята":1, "Сахар":2}, glass: "Highball", tool: "Muddle", g: ["Мята"] },
         "Aperol Spritz": { ing: {"Апероль":60, "Игристое вино":90, "Содовая":30}, glass: "Wine Glass", tool: "Build", g: ["Апельсин"] },
-        "Margarita": { ing: {"Текила":35, "Апельсиновый ликер":20, "Лайм":15}, glass: "Margarita Glass", tool: "Shaker", g: ["Соляная кромка"] },
-        "Bloody Mary": { ing: {"Водка":45, "Томатный сок":90, "Лимонный сок":15, "Ворчестер":2, "Табаско":2}, glass: "Highball", tool: "Build", g: ["Лимон"] },
         "Pina Colada": { ing: {"Ром":50, "Ананасовый сок":90, "Кокосовый сироп":20, "Лимонный сок":10}, glass: "Hurricane", tool: "Shaker", g: ["Ананас"] },
         "Cosmopolitan": { ing: {"Водка":40, "Апельсиновый ликер":15, "Клюквенный морс":30, "Лимонный сок":10}, glass: "Martini Glass", tool: "Shaker", g: ["Цедра лимона"] },
-        "Daiquiri": { ing: {"Ром":45, "Лайм":25, "Сахар":15}, glass: "Martini Glass", tool: "Shaker", g: ["Нет"] },
         "Long Island": { ing: {"Водка":15, "Ром":15, "Текила":15, "Джин":15, "Апельсиновый ликер":15, "Лимонный сок":20, "Пепси":50}, glass: "Highball", tool: "Build", g: ["Лимон"] },
-        
-        // --- NEW ERA ---
         "Dark 'n' Stormy": { ing: {"Золотой ром":60, "Содовая":100, "Лайм":10}, glass: "Highball", tool: "Build", g: ["Лайм"] },
         "French Martini": { ing: {"Водка":45, "Малиновый ликер":15, "Ананасовый сок":15}, glass: "Martini Glass", tool: "Shaker", g: ["Цедра лимона"] }
+    };
 
-   // Строки 107-111 (ЗАМЕНИТЬ НА ЭТО):
+    // --- ИНГРЕДИЕНТЫ ---
     const ingredients = {
         "Алкоголь": ["Водка", "Ром", "Золотой ром", "Джин", "Текила", "Игристое вино", "Бурбон", "Виски"],
         "Ликеры": ["Бейлис", "Кофейный ликер", "Апельсиновый ликер", "Дынный ликер", "Персиковый ликер", "Апероль", "Кампари", "Малиновый ликер", "Сухой вермут", "Мартини Россо"],
@@ -152,7 +153,7 @@
     };
 
     const ui = {
-        glasses: ["Shot", "Highball", "Martini Glass", "Margarita Glass", "Hurricane", "Wine Glass"],
+        glasses: ["Shot", "Highball", "Martini Glass", "Margarita Glass", "Hurricane", "Wine Glass", "Old Fashioned"],
         tools: ["Build", "Shaker", "Stir", "Layered", "Muddle"],
         garnishes: ["Нет", "Лайм", "Мята", "Апельсин", "Лимон", "Ананас", "Соляная кромка", "Цедра лимона"]
     };
@@ -166,12 +167,11 @@
 
     function toggleMusic() {
         const p = document.getElementById('audio-player');
-        p.paused ? p.play().catch(()=>alert('Файл music.mp3 не найден в папке')) : p.pause();
+        p.paused ? p.play().catch(()=>alert('Нажми еще раз или проверь файл music.mp3')) : p.pause();
     }
 
     function startGame(mode, sec = 0) {
         if (state.interval) clearInterval(state.interval);
-        
         state.mode = mode;
         state.time = sec;
         state.orders = mode === 'work' ? Object.keys(recipes).sort(()=>Math.random()-0.5) : Object.keys(recipes);
@@ -277,7 +277,7 @@
         let report = `ИТОГИ СЕССИИ\n\n${reason}\nРезультат: ${state.score} из ${state.currentIdx}\nВремя: ${finalTime}\n\n`;
         
         state.history.forEach(h => {
-            report += `${h.ok ? '✅' : '❌'} ${h.name}\n${h.errs.length ? '   ' + h.errs.join(', ') + '\n' : ''}`;
+            report += `${h.ok ? '✅' : '❌'} ${h.name}\n${h.errs.length ? '    ' + h.errs.join(', ') + '\n' : ''}`;
         });
         
         alert(report);
@@ -301,6 +301,7 @@
                 <div style="font-size:9px; height:20px; overflow:hidden">${ing}</div>
                 <button class="pour-btn" onclick="addIng('${ing}', 10)">+10</button>
                 <button class="pour-btn" onclick="addIng('${ing}', 20)">+20</button>
+                <button class="pour-btn" onclick="addIng('${ing}', 5)">+5</button>
             </div>
         `).join('');
     }
