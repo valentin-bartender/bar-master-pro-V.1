@@ -213,7 +213,17 @@
     function changeStep(s) { [1,2,3].forEach(n=>document.getElementById('step-'+n).classList.add('hidden')); document.getElementById('step-'+s).classList.remove('hidden'); }
     function resetMix() { state.build={ing:{}, glass:'', tool:''}; renderMix(); document.querySelectorAll('.select-btn').forEach(b=>b.classList.remove('active')); }
     function toggleHint() { const h=document.getElementById('hint-box'); h.style.display = h.style.display==='block'?'none':'block'; }
-    function toggleMusic() { const p=document.getElementById('audio-player'); p.paused ? p.play() : p.pause(); }
+   function toggleMusic() { 
+    const p = document.getElementById('audio-player');
+    if (p.paused) {
+        p.play().catch(err => {
+            console.log('Воспроизведение заблокировано браузером:', err);
+            alert('Нажмите кнопку музыки еще раз для запуска');
+        });
+    } else {
+        p.pause();
+    }
+}
 </script>
 </body>
 </html>
