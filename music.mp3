@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bar Master Pro - Final Build</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0a0a0a; color: #fff; height: 100vh; overflow: hidden; }
+        .container { display: flex; flex-direction: column; height: 100vh; }
+
+        /* Экраны */
+        .screen { display: none; height: 100%; }
+        .screen.active { display: flex; flex-direction: column; }
+
+        /* Меню */
+        #screen-menu { justify-content: center; align-items: center; background: radial-gradient(circle, #1e1b4b 0%, #000 100%); }
+        .menu-card { background: rgba(255,255,255,0.05); padding: 40px; border-radius: 20px; border: 1px solid #22d3ee; text-align: center; max-width: 500px; }
+        .mode-btn { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #22d3ee; background: transparent; color: #22d3ee; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .mode-btn:hover { background: #22d3ee; color: #000; box-shadow: 0 0 20px #22d3ee; }
+
+        /* Header */
+        .header { background: #111; padding: 12px 20px; border-bottom: 2px solid #22d3ee; display: flex; justify-content: space-between; align-items: center; }
+        .stat-box { padding: 6px 12px; border-radius: 6px; border: 1px solid #22d3ee; font-size: 13px; background: rgba(34, 211, 238, 0.1); }
+
+        /* Layout */
+        .main-layout { display: flex; flex: 1; overflow: hidden; }
+        .game-area { width: 70%; padding: 15px; overflow-y: auto; background: #0f1115; border-right: 1px solid #333; }
+        .side-panel { width: 30%; background: #111; padding: 15px; display: flex; flex-direction: column; gap: 15px; }
+
+        /* Селекторы */
+        .grid-select { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-bottom: 15px; }
+        .select-btn { padding: 10px; background: #1a1a1a; border: 1px solid #444; color: #fff; border-radius: 6px; cursor: pointer; font-size: 10px; }
+        .select-btn.active { border-color: #f472b6; background: rgba(244, 114, 182, 0.2); }
+
+        /* Бутылки */
+        .bottles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 8px; }
+        .bottle-card { background: #1a1a1a; padding: 8px; border-radius: 6px; text-align: center; border: 1px solid #333; }
+        .pour-btn { background: #333; border: none; color: #22d3ee; padding: 5px; font-size: 9px; cursor: pointer; margin: 1px; border-radius: 3px; }
+
+        .finish-btn { width: 100%; padding: 15px; border-radius: 8px; background: #10b981; color: #fff; font-weight: bold; border: none; cursor: pointer; }
+        
+        .feedback-box { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border: 1px solid #444; flex-grow: 1; overflow-y: auto; font-size: 11px; }
+        .err-text { color: #ff4444; margin-bottom: 4px; }
+        .success-text { color: #10b981; font-weight: bold; }
+
+        /* Футер управления */
+        .controls-footer { position: fixed; bottom: 20px; left: 20px; display: flex; gap: 10px; }
+        .float-btn { width: 45px; height: 45px; border-radius: 50%; background: #222; border: 1px solid #22d3ee; color: #fff; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+        
+        .hint-overlay { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; border: 2px solid #ffd700; padding: 20px; border-radius: 10px; z-index: 1000; display: none; white-space: pre-line; box-shadow: 0 0 50px rgba(0,0,0,0.9); }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="screen-menu" class="screen active">
+        <div class="menu-card">
+            <h1 style="color:#22d3ee; margin-bottom:10px">BAR MASTER PRO</h1>
+            <button class="mode-btn" onclick="startGame('work', 180)">РАБОЧАЯ СЕССИЯ (3 МИН)</button>
+            <button class="mode-btn" onclick="startGame('work', 300)">РАБОЧАЯ СЕССИЯ (5 МИН)</button>
+            <button class="mode-btn" onclick="startGame('marathon')">МАРАФОН (ВСЁ МЕНЮ)</button>
+            <p style="font-size: 10px; color: #555; margin-top: 15px;">Файл музыки: music.mp3 в папке с игрой</p>
+        </div>
+    </div>
+
+    <div id="screen-game" class="screen">
+        <div class="header">
+            <div class="header-title">🍸 <span id="display-mode">СМЕНА</span></div>
+            <div class="header-stats">
+                <div class="stat-box">⏱️ <span id="timer">00:00</span></div>
+                <div class="stat-box">⭐ <span id="score-counter">0/0</span></div>
+                <div class="stat-box" style="color:#f472b6">ЗАКАЗ: <b id="order-name">---</b></div>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <div class="game-area">
+                <div id="step-1">
+                    <h4 style="color:#22d3ee; margin-bottom:10px">ЭТАП 1: ПОДГОТОВКА</h4>
+                    <div class="grid-select" id="glass-grid"></div>
+                    <div class="grid-select" id="tool-grid"></div>
+                    <button class="finish-btn" onclick="changeStep(2)">ПЕРЕЙТИ К НАЛИВУ</button>
+                </div>
+
+                <div id="step-2" class="hidden">
+                    <h4 style="color:#22d3ee; margin-bottom:10px">ЭТАП 2: ИНГРЕДИЕНТЫ</h4>
+                    <div id="tabs-bar" style="margin-bottom:10px"></div>
+                    <div id="bottles-grid" class="bottles-grid"></div>
+                    <div style="margin-top:15px; font-size:11px; background: #222; padding: 5px;">В БОКАЛЕ: <span id="current-mix">Пусто</span></div>
+                    <button class="finish-btn" style="margin-top:10px" onclick="changeStep(3)">К ГАРНИРУ</button>
+                </div>
+
+                <div id="step-3" class="hidden">
+                    <h4 style="color:#22d3ee; margin-bottom:10px">ЭТАП 3: ГАРНИР</h4>
+                    <div class="grid-select" id="garnish-grid"></div>
+                </div>
+            </div>
+
+            <div class="side-panel">
+                <h4 style="font-size: 11px; color: #22d3ee">ПОСЛЕДНИЙ РЕЗУЛЬТАТ:</h4>
+                <div class="feedback-box" id="live-feedback">Приступайте к работе!</div>
+                <button onclick="resetMix()" style="padding:10px; background:#431407; border:none; color:white; border-radius:5px; cursor:pointer; font-size:11px">СБРОСИТЬ СОСТАВ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="hint-box" class="hint-overlay"></div>
+<div class="controls-footer">
+    <button class="float-btn" onclick="toggleHint()">💡</button>
+    <button class="float-btn" onclick="toggleMusic()">🎵</button>
+</div>
+
+<audio id="audio-player" loop src="music.mp3"></audio>
+
+<script>
+    const recipes = {
+        "B-52": { ing: {"Бейлис":20, "Кофейный ликер":20, "Апельсиновый ликер":20}, glass: "Shot", tool: "Layered", g: ["Нет"] },
+        "Uncle Bob": { ing: {"Водка":30, "Сироп Гренадин":10, "Лимонный сок":10}, glass: "Shot", tool: "Shaker", g: ["Нет"] },
+        "Sex on the beach": { ing: {"Водка":40, "Персиковый ликер":20, "Клюквенный морс":40, "Ананасовый сок":40}, glass: "Highball", tool: "Build", g: ["Апельсин"] },
+        "Mojito Classic": { ing: {"Ром":50, "Содовая":100, "Лайм":20, "Мята":1, "Сахар":2}, glass: "Highball", tool: "Muddle", g: ["Мята"] },
+        "Aperol Spritz": { ing: {"Апероль":60, "Игристое вино":90, "Содовая":30}, glass: "Wine Glass", tool: "Build", g: ["Апельсин"] },
+        "Pina Colada": { ing: {"Ром":50, "Ананасовый сок":90, "Кокосовый сироп":20, "Лимонный сок":10}, glass: "Hurricane", tool: "Shaker", g: ["Ананас"] },
+        "Long Island Iced Tea": { ing: {"Водка":15, "Ром":15, "Текила":15, "Джин":15, "Апельсиновый ликер":15, "Лимонный сок":20, "Пепси":50}, glass: "Highball", tool: "Build", g: ["Лимон"] },
+        "Cosmopolitan": { ing: {"Водка":40, "Апельсиновый ликер":15, "Клюквенный морс":30, "Лимонный сок":10}, glass: "Martini Glass", tool: "Shaker", g: ["Цедра лимона"] },
+        "Margarita Classic": { ing: {"Текила":35, "Апельсиновый ликер":20, "Лайм":15}, glass: "Margarita Glass", tool: "Shaker", g: ["Соляная кромка"] }
+    };
+
+    const ingredients = {
+        "Крепкое": ["Водка", "Ром", "Джин", "Текила", "Игристое вино"],
+        "Ликеры/Сиропы": ["Бейлис", "Кофейный ликер", "Апельсиновый ликер", "Персиковый ликер", "Апероль", "Сироп Гренадин", "Кокосовый сироп", "Сахар"],
+        "Соки/Миксы": ["Ананасовый сок", "Лимонный сок", "Сок лайма", "Клюквенный морс", "Содовая", "Пепси", "Молоко"],
+        "Фрукты/Декор": ["Лайм", "Мята", "Апельсин", "Лимон", "Ананас", "Соляная кромка", "Цедра лимона"]
+    };
+
+    const ui = {
+        glasses: ["Shot", "Highball", "Martini Glass", "Margarita Glass", "Hurricane", "Wine Glass"],
+        tools: ["Build", "Shaker", "Layered", "Muddle"],
+        garnishes: ["Нет", "Лайм", "Мята", "Апельсин", "Лимон", "Ананас", "Соляная кромка", "Цедра лимона"]
+    };
+
+    let state = {
+        mode: '', time: 0, interval: null,
+        orders: [], currentIdx: 0,
+        build: { ing: {}, glass: '', tool: '' },
+        score: 0, history: [], startTime: 0
+    };
+
+    function toggleMusic() {
+        const p = document.getElementById('audio-player');
+        p.paused ? p.play().catch(()=>alert('Файл music.mp3 не найден в папке')) : p.pause();
+    }
+
+    function startGame(mode, sec = 0) {
+        if (state.interval) clearInterval(state.interval);
+        
+        state.mode = mode;
+        state.time = sec;
+        state.orders = mode === 'work' ? Object.keys(recipes).sort(()=>Math.random()-0.5) : Object.keys(recipes);
+        state.currentIdx = 0;
+        state.score = 0;
+        state.history = [];
+        state.startTime = Date.now();
+
+        document.getElementById('screen-menu').classList.remove('active');
+        document.getElementById('screen-game').classList.add('active');
+        document.getElementById('display-mode').innerText = mode === 'work' ? 'СЕССИЯ' : 'МАРАФОН';
+        
+        renderUI();
+        loadNextOrder();
+        
+        if(mode === 'work') {
+            updateTimerDisplay();
+            startTimer();
+        } else {
+            document.getElementById('timer').innerText = "00:00";
+            startMarathonTimer();
+        }
+    }
+
+    function startTimer() {
+        state.interval = setInterval(() => {
+            state.time--;
+            updateTimerDisplay();
+            if(state.time <= 0) finishGame("Время вышло!");
+        }, 1000);
+    }
+
+    function startMarathonTimer() {
+        state.interval = setInterval(() => {
+            const diff = Math.floor((Date.now() - state.startTime) / 1000);
+            const m = Math.floor(diff / 60), s = diff % 60;
+            document.getElementById('timer').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        let m = Math.floor(state.time / 60), s = state.time % 60;
+        document.getElementById('timer').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    function renderUI() {
+        document.getElementById('glass-grid').innerHTML = ui.glasses.map(g => `<button class="select-btn" onclick="selectAttr('glass', '${g}', this)">${g}</button>`).join('');
+        document.getElementById('tool-grid').innerHTML = ui.tools.map(t => `<button class="select-btn" onclick="selectAttr('tool', '${t}', this)">${t}</button>`).join('');
+        document.getElementById('garnish-grid').innerHTML = ui.garnishes.map(g => `<button class="select-btn" onclick="submitCocktail('${g}')">${g}</button>`).join('');
+        
+        const tabs = Object.keys(ingredients);
+        document.getElementById('tabs-bar').innerHTML = tabs.map(t => `<button class="select-btn" style="width:auto; margin-right:5px" onclick="renderBottles('${t}')">${t}</button>`).join('');
+        renderBottles(tabs[0]);
+    }
+
+    function loadNextOrder() {
+        const name = state.orders[state.currentIdx];
+        document.getElementById('order-name').innerText = name;
+        document.getElementById('score-counter').innerText = `${state.score}/${state.orders.length}`;
+        
+        const r = recipes[name];
+        let h = `<b>РЕЦЕПТ: ${name}</b>\n`;
+        for(let [i, v] of Object.entries(r.ing)) h += `• ${i}: ${v}ml\n`;
+        h += `\nБокал: ${r.glass}\nМетод: ${r.tool}\nГарнир: ${r.g[0]}`;
+        document.getElementById('hint-box').innerHTML = h;
+        
+        resetMix();
+        changeStep(1);
+    }
+
+    function submitCocktail(garnish) {
+        const target = recipes[state.orders[state.currentIdx]];
+        const build = state.build;
+        let errors = [];
+
+        if(build.glass !== target.glass) errors.push(`Бокал (нужен ${target.glass})`);
+        if(build.tool !== target.tool) errors.push(`Метод (нужен ${target.tool})`);
+        if(!target.g.includes(garnish)) errors.push(`Гарнир (нужен ${target.g[0]})`);
+
+        for(let [ing, val] of Object.entries(target.ing)) {
+            if((build.ing[ing] || 0) !== val) errors.push(`${ing}: ${build.ing[ing]||0}/${val}ml`);
+        }
+
+        const feedbackEl = document.getElementById('live-feedback');
+        if(errors.length === 0) {
+            state.score++;
+            feedbackEl.innerHTML = `<div class="success-text">✅ ${state.orders[state.currentIdx]}: ИДЕАЛЬНО!</div>`;
+        } else {
+            feedbackEl.innerHTML = `<div style="color:#f472b6; font-weight:bold; margin-bottom:5px">❌ ${state.orders[state.currentIdx]}:</div>` + 
+                                   errors.map(e => `<div class="err-text">• ${e}</div>`).join('');
+        }
+
+        state.history.push({ name: state.orders[state.currentIdx], ok: errors.length === 0, errs: errors });
+        state.currentIdx++;
+
+        if(state.currentIdx >= state.orders.length) finishGame("Меню выполнено!");
+        else loadNextOrder();
+    }
+
+    function finishGame(reason) {
+        clearInterval(state.interval);
+        const finalTime = document.getElementById('timer').innerText;
+        let report = `ИТОГИ СЕССИИ\n\n${reason}\nРезультат: ${state.score} из ${state.currentIdx}\nВремя: ${finalTime}\n\n`;
+        
+        state.history.forEach(h => {
+            report += `${h.ok ? '✅' : '❌'} ${h.name}\n${h.errs.length ? '   ' + h.errs.join(', ') + '\n' : ''}`;
+        });
+        
+        alert(report);
+        location.reload();
+    }
+
+    function selectAttr(k, v, el) {
+        state.build[k] = v;
+        el.parentNode.querySelectorAll('.select-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    function addIng(n, v) {
+        state.build.ing[n] = (state.build.ing[n] || 0) + v;
+        document.getElementById('current-mix').innerText = Object.entries(state.build.ing).map(([i, vol]) => `${i}(${vol})`).join(', ');
+    }
+
+    function renderBottles(cat) {
+        document.getElementById('bottles-grid').innerHTML = ingredients[cat].map(ing => `
+            <div class="bottle-card">
+                <div style="font-size:9px; height:20px; overflow:hidden">${ing}</div>
+                <button class="pour-btn" onclick="addIng('${ing}', 10)">+10</button>
+                <button class="pour-btn" onclick="addIng('${ing}', 20)">+20</button>
+            </div>
+        `).join('');
+    }
+
+    function changeStep(s) {
+        [1,2,3].forEach(n => document.getElementById('step-'+n).classList.add('hidden'));
+        document.getElementById('step-'+s).classList.remove('hidden');
+    }
+
+    function resetMix() {
+        state.build = { ing: {}, glass: '', tool: '' };
+        document.getElementById('current-mix').innerText = "Пусто";
+        document.querySelectorAll('.select-btn').forEach(b => b.classList.remove('active'));
+    }
+
+    function toggleHint() {
+        const h = document.getElementById('hint-box');
+        h.style.display = h.style.display === 'block' ? 'none' : 'block';
+    }
+</script>
+</body>
+</html>
