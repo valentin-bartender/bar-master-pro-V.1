@@ -1,326 +1,1577 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bar Master Pro - Final Build</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: #0a0a0a; color: #fff; height: 100vh; overflow: hidden; }
-        .container { display: flex; flex-direction: column; height: 100vh; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bar Master Pro</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif; background: #0a0a0a; color: #fff; height: 100vh; overflow: hidden; }
+    .container { display: flex; flex-direction: column; height: 100vh; }
 
-        /* Экраны */
-        .screen { display: none; height: 100%; }
-        .screen.active { display: flex; flex-direction: column; }
+    .screen { display: none; height: 100%; }
+    .screen.active { display: flex; flex-direction: column; }
 
-        /* Меню */
-        #screen-menu { justify-content: center; align-items: center; background: radial-gradient(circle, #1e1b4b 0%, #000 100%); }
-        .menu-card { background: rgba(255,255,255,0.05); padding: 40px; border-radius: 20px; border: 1px solid #22d3ee; text-align: center; max-width: 500px; }
-        .mode-btn { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #22d3ee; background: transparent; color: #22d3ee; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .mode-btn:hover { background: #22d3ee; color: #000; box-shadow: 0 0 20px #22d3ee; }
+    #screen-menu { justify-content: center; align-items: center; background: radial-gradient(circle, #1e1b4b 0%, #000 100%); }
+    .menu-card { background: rgba(255,255,255,0.05); padding: 26px; border-radius: 20px; border: 1px solid #22d3ee; text-align: center; max-width: 880px; width: min(880px, 94vw); }
+    .mode-btn { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #22d3ee; background: transparent; color: #22d3ee; border-radius: 10px; cursor: pointer; font-weight: 900; transition: 0.25s; }
+    .mode-btn:hover { background: #22d3ee; color: #000; box-shadow: 0 0 20px #22d3ee; }
 
-        /* Header */
-        .header { background: #111; padding: 12px 20px; border-bottom: 2px solid #22d3ee; display: flex; justify-content: space-between; align-items: center; }
-        .stat-box { padding: 6px 12px; border-radius: 6px; border: 1px solid #22d3ee; font-size: 13px; background: rgba(34, 211, 238, 0.1); }
+    .header {
+      background: #111;
+      padding: 10px 12px;
+      border-bottom: 2px solid #22d3ee;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: nowrap;
+      min-height: 44px;
+    }
+    .header-title { display:flex; align-items:center; gap:8px; font-weight: 900; white-space: nowrap; }
+    .header-right { display:flex; align-items:center; gap:8px; flex-wrap: nowrap; }
+    .stat-box {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #22d3ee;
+      font-size: 12px;
+      background: rgba(34, 211, 238, 0.10);
+      display:flex; gap:6px; align-items:center;
+      white-space: nowrap;
+    }
+    .stat-order {
+      border-color:#f472b6;
+      background: rgba(244,114,182,0.10);
+      max-width: 44vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .stat-order b { color:#f472b6; }
 
-        /* Layout */
-        .main-layout { display: flex; flex: 1; overflow: hidden; }
-        .game-area { width: 70%; padding: 15px; overflow-y: auto; background: #0f1115; border-right: 1px solid #333; }
-        .side-panel { width: 30%; background: #111; padding: 15px; display: flex; flex-direction: column; gap: 15px; }
+    .main-layout { display: flex; flex: 1; overflow: hidden; }
+    .game-area { width: 70%; padding: 14px; overflow-y: auto; background: #0f1115; border-right: 1px solid #333; }
+    .side-panel { width: 30%; background: #111; padding: 14px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
 
-        /* Селекторы */
-        .grid-select { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-bottom: 15px; }
-        .select-btn { padding: 10px; background: #1a1a1a; border: 1px solid #444; color: #fff; border-radius: 6px; cursor: pointer; font-size: 10px; }
-        .select-btn.active { border-color: #f472b6; background: rgba(244, 114, 182, 0.2); }
+    .grid-select { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 12px; }
+    .select-btn { padding: 10px; background: #1a1a1a; border: 1px solid #444; color: #fff; border-radius: 10px; cursor: pointer; font-size: 11px; }
+    .select-btn.active { border-color: #f472b6; background: rgba(244, 114, 182, 0.2); }
 
-        /* Бутылки */
-        .bottles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 8px; }
-        .bottle-card { background: #1a1a1a; padding: 8px; border-radius: 6px; text-align: center; border: 1px solid #333; }
-        .pour-btn { background: #333; border: none; color: #22d3ee; padding: 5px; font-size: 9px; cursor: pointer; margin: 1px; border-radius: 3px; }
+    .tabs { display:flex; flex-wrap: nowrap; gap: 6px; margin-bottom: 10px; overflow-x: auto; padding-bottom: 2px; }
+    .tab-btn { padding: 8px 10px; border-radius: 999px; border: 1px solid #444; background:#1a1a1a; color:#fff; cursor:pointer; font-size: 11px; white-space: nowrap; }
+    .tab-btn.active { border-color:#22d3ee; background: rgba(34, 211, 238, 0.12); }
 
-        .finish-btn { width: 100%; padding: 15px; border-radius: 8px; background: #10b981; color: #fff; font-weight: bold; border: none; cursor: pointer; }
-        
-        .feedback-box { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border: 1px solid #444; flex-grow: 1; overflow-y: auto; font-size: 11px; }
-        .err-text { color: #ff4444; margin-bottom: 4px; }
-        .success-text { color: #10b981; font-weight: bold; }
+    .bottles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); gap: 8px; }
+    .bottle-card { background: #1a1a1a; padding: 8px; border-radius: 12px; text-align: center; border: 1px solid #333; }
+    .pour-row { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; margin-top:6px; }
+    .pour-btn { background: #333; border: none; color: #22d3ee; padding: 6px 7px; font-size: 10px; cursor: pointer; border-radius: 8px; }
+    .pour-btn:hover { filter: brightness(1.15); }
 
-        /* Футер управления */
-        .controls-footer { position: fixed; bottom: 20px; left: 20px; display: flex; gap: 10px; }
-        .float-btn { width: 45px; height: 45px; border-radius: 50%; background: #222; border: 1px solid #22d3ee; color: #fff; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
-        
-        .hint-overlay { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; border: 2px solid #ffd700; padding: 20px; border-radius: 10px; z-index: 1000; display: none; white-space: pre-line; box-shadow: 0 0 50px rgba(0,0,0,0.9); }
-        .hidden { display: none; }
-    </style>
+    .finish-btn { width: 100%; padding: 14px; border-radius: 12px; background: #10b981; color: #fff; font-weight: 900; border: none; cursor: pointer; }
+    .finish-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .panel-title { font-size: 11px; color: #22d3ee; letter-spacing: 0.6px; font-weight: 900; }
+    .panel-sub { font-size: 11px; color: #aab3c3; line-height: 1.35; }
+
+    .feedback-list {
+      flex: 1;
+      overflow-y: auto;
+      border: 1px solid #333;
+      border-radius: 14px;
+      padding: 10px;
+      background: rgba(0,0,0,0.22);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .fb-card { border: 1px solid #2a2a2a; border-radius: 14px; padding: 10px; background: rgba(255,255,255,0.03); }
+    .fb-head { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+    .fb-name { font-weight: 900; color: #fff; font-size: 12px; }
+    .fb-badge { font-size: 11px; font-weight: 900; padding: 3px 8px; border-radius: 999px; border: 1px solid #333; white-space: nowrap; }
+    .badge-ok { color:#10b981; border-color:#10b981; background: rgba(16,185,129,0.12); }
+    .badge-bad { color:#f472b6; border-color:#f472b6; background: rgba(244,114,182,0.12); }
+    .fb-line { font-size: 11px; color:#ddd; margin-top: 6px; line-height: 1.35; }
+    .fb-errs { margin-top: 6px; font-size: 11px; color:#ffb4d6; }
+    .fb-errs ul { margin-top: 4px; padding-left: 18px; font-size: 11px; }
+    .fb-errs li { margin-bottom: 2px; }
+
+    .mix-box { margin-top:12px; font-size:11px; background:#222; padding:10px; border-radius:12px; border:1px solid #333; }
+
+    .hint-overlay {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: #1a1a1a; border: 2px solid #ffd700; padding: 18px; border-radius: 12px;
+      z-index: 2000; display: none; white-space: pre-line;
+      box-shadow: 0 0 50px rgba(0,0,0,0.9); font-size: 14px; max-width: min(860px, 94vw);
+    }
+    .hidden { display: none !important; }
+
+    .controls-footer { position: fixed; bottom: 12px; left: 12px; display: flex; gap: 10px; z-index: 1001; }
+    .float-btn { width: 46px; height: 46px; border-radius: 50%; background: #222; border: 1px solid #22d3ee; color: #fff; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+    .float-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .inline-row { display:flex; gap:8px; align-items:center; flex-wrap: wrap; }
+    .text-input {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid #22d3ee;
+      background: rgba(34, 211, 238, 0.08);
+      color: #fff;
+      font-weight: 900;
+      font-size: 12px;
+      outline: none;
+      width: min(520px, 100%);
+    }
+    .mini-btn {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid #22d3ee;
+      background: transparent;
+      color: #22d3ee;
+      cursor: pointer;
+      font-weight: 900;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .mini-btn:hover { background:#22d3ee; color:#000; }
+
+    .card { border: 1px solid #333; border-radius: 16px; background: rgba(255,255,255,0.03); padding: 12px; }
+    .card-h { font-size: 13px; font-weight: 900; color:#fff; margin-bottom: 8px; }
+
+    .training-bar {
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding: 10px; border-radius: 16px; border:1px solid #333;
+      background: rgba(0,0,0,0.25); margin-bottom: 10px;
+    }
+    .training-left { display:flex; flex-direction:column; gap:4px; min-width: 140px; }
+    .training-title { font-weight: 900; font-size: 13px; white-space: nowrap; overflow:hidden; text-overflow: ellipsis; max-width: 40vw; }
+    .training-sub { font-size: 11px; color:#aab3c3; white-space: nowrap; }
+    .training-actions { display:flex; gap:8px; flex-wrap: wrap; justify-content:flex-end; }
+
+    .pill {
+      font-size: 11px; border:1px solid #22d3ee; border-radius: 999px;
+      padding: 5px 10px; background: rgba(34,211,238,0.10);
+      display:inline-flex; gap:6px; align-items:center; white-space: nowrap;
+    }
+    .attempt-row { display:flex; gap:10px; align-items:center; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+
+    #screen-results { background: radial-gradient(circle, #0b1220 0%, #000 70%); }
+    .results-wrap { max-width: 1060px; margin: 0 auto; padding: 24px; width: 100%; overflow-y:auto; }
+    .results-card { border: 1px solid #22d3ee; border-radius: 18px; padding: 18px; background: rgba(255,255,255,0.04); }
+    .results-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+    .res-box { border: 1px solid #2a2a2a; border-radius: 14px; padding: 12px; background: rgba(0,0,0,0.25); }
+    .res-h { color:#22d3ee; font-weight:900; font-size:12px; margin-bottom: 6px; }
+    .res-p { font-size: 12px; color:#eee; line-height: 1.45; }
+    .res-list { margin-top: 6px; padding-left: 18px; font-size: 12px; color:#ddd; }
+    .res-actions { display:flex; gap:10px; margin-top: 16px; flex-wrap: wrap; }
+    .res-btn { padding: 12px 14px; border-radius: 12px; border: 1px solid #22d3ee; background: transparent; color:#22d3ee; cursor:pointer; font-weight: 900; }
+    .res-btn:hover { background:#22d3ee; color:#000; }
+
+    @media (max-width: 980px) { .game-area { width: 60%; } .side-panel { width: 40%; } .stat-order { max-width: 48vw; } }
+    @media (max-width: 780px) {
+      body { overflow:auto; }
+      .main-layout { flex-direction: column; }
+      .game-area, .side-panel { width: 100%; height: auto; }
+      .side-panel { max-height: 44vh; }
+      .results-grid { grid-template-columns: 1fr; }
+      .stat-order { max-width: 62vw; }
+    }
+  </style>
 </head>
+
 <body>
-
 <div class="container">
-    <div id="screen-menu" class="screen active">
-        <div class="menu-card">
-            <h1 style="color:#22d3ee; margin-bottom:10px">BAR MASTER PRO</h1>
-            <button class="mode-btn" onclick="startGame('work', 180)">РАБОЧАЯ СЕССИЯ (3 МИН)</button>
-            <button class="mode-btn" onclick="startGame('work', 300)">РАБОЧАЯ СЕССИЯ (5 МИН)</button>
-            <button class="mode-btn" onclick="startGame('marathon')">МАРАФОН (ВСЁ МЕНЮ)</button>
-            <p style="font-size: 10px; color: #555; margin-top: 15px;">Файл музыки: music.mp3 в папке с игрой</p>
+  <div id="screen-menu" class="screen active">
+    <div class="menu-card">
+      <h1 style="color:#22d3ee; margin-bottom:10px; letter-spacing:0.5px;">BAR MASTER PRO</h1>
+
+      <button class="mode-btn" data-action="start" data-mode="random20">🎲 20 RANDOM COCKTAILS</button>
+      <button class="mode-btn" data-action="start" data-mode="sprint5">⚡ 5-MIN SPRINT</button>
+      <button class="mode-btn" data-action="start" data-mode="marathon">🏁 MARATHON (ALL)</button>
+      <button class="mode-btn" data-action="start" data-mode="exam">🎓 EXAM MODE (1 mistake = fail)</button>
+      <button class="mode-btn" data-action="start" data-mode="memory">🧠 MEMORY MODE (3×5)</button>
+      <button class="mode-btn" data-action="start" data-mode="training">🧩 TRAINING</button>
+    </div>
+  </div>
+
+  <div id="screen-game" class="screen">
+    <div class="header">
+      <div class="header-title">🍸 <span id="display-mode">—</span></div>
+      <div class="header-right">
+        <div class="stat-box" id="timer-box">⏱️ <span id="timer">0:00</span></div>
+        <div class="stat-box" id="score-box">⭐ <span id="score-counter">—</span></div>
+        <div class="stat-box hidden" id="sprint-norm" style="border-color:#10b981; background: rgba(16,185,129,0.12);">⚡ Norm: <b>30s</b></div>
+        <div class="stat-box stat-order">
+          <span id="order-label">ORDER:</span>
+          <b id="order-name">---</b>
         </div>
+      </div>
     </div>
 
-    <div id="screen-game" class="screen">
-        <div class="header">
-            <div class="header-title">🍸 <span id="display-mode">СМЕНА</span></div>
-            <div class="header-stats">
-                <div class="stat-box">⏱️ <span id="timer">00:00</span></div>
-                <div class="stat-box">⭐ <span id="score-counter">0/0</span></div>
-                <div class="stat-box" style="color:#f472b6">ЗАКАЗ: <b id="order-name">---</b></div>
+    <div class="main-layout">
+      <div class="game-area">
+        <div id="training-screen" class="hidden">
+          <div class="card" style="margin-bottom:10px">
+            <div class="card-h">Training • select cocktail</div>
+            <div class="inline-row">
+              <select id="training-select" class="text-input" style="font-weight:900;"></select>
+              <button class="mini-btn" data-action="training-load">Select</button>
             </div>
+          </div>
+
+          <div id="training-bar" class="training-bar hidden">
+            <div class="training-left">
+              <div class="training-title" id="training-name">—</div>
+              <div class="training-sub" id="training-progress">—</div>
+            </div>
+            <div class="training-actions">
+              <span class="pill">🎯 <b id="training-goal">12s</b></span>
+              <span class="pill">🖱 <b id="training-opt">—</b></span>
+              <button class="mini-btn" data-action="training-start">Start</button>
+              <button class="mini-btn" data-action="training-reset">Reset</button>
+            </div>
+          </div>
+
+          <div id="training-live" class="card hidden">
+            <div class="attempt-row">
+              <span class="pill">⏱ <b id="training-live-time">0.0s</b></span>
+              <span class="pill">🖱 <b id="training-live-clicks">0</b></span>
+              <span class="pill">🍶 <b id="training-live-pour">0</b></span>
+              <span class="pill">📑 <b id="training-live-tabs">0</b></span>
+            </div>
+          </div>
         </div>
 
-        <div class="main-layout">
-            <div class="game-area">
-                <div id="step-1">
-                    <h4 style="color:#22d3ee; margin-bottom:10px">ЭТАП 1: ПОДГОТОВКА</h4>
-                    <div class="grid-select" id="glass-grid"></div>
-                    <div class="grid-select" id="tool-grid"></div>
-                    <button class="finish-btn" onclick="changeStep(2)">ПЕРЕЙТИ К НАЛИВУ</button>
-                </div>
-
-                <div id="step-2" class="hidden">
-                    <h4 style="color:#22d3ee; margin-bottom:10px">ЭТАП 2: ИНГРЕДИЕНТЫ</h4>
-                    <div id="tabs-bar" style="margin-bottom:10px"></div>
-                    <div id="bottles-grid" class="bottles-grid"></div>
-                    <div style="margin-top:15px; font-size:11px; background: #222; padding: 5px;">В БОКАЛЕ: <span id="current-mix">Пусто</span></div>
-                    <button class="finish-btn" style="margin-top:10px" onclick="changeStep(3)">К ГАРНИРУ</button>
-                </div>
-
-                <div id="step-3" class="hidden">
-                    <h4 style="color:#22d3ee; margin-bottom:10px">ЭТАП 3: ГАРНИР</h4>
-                    <div class="grid-select" id="garnish-grid"></div>
-                </div>
+        <div id="memory-box" class="hidden">
+          <div class="card" style="margin-bottom:10px">
+            <div class="card-h">Memory</div>
+            <div class="inline-row">
+              <input id="memory-input" class="text-input" placeholder="Type cocktail name..." />
+              <button class="mini-btn" data-action="memory-confirm">Select order</button>
+              <button class="mini-btn" data-action="memory-forgot">I forgot</button>
+              <button class="mini-btn" data-action="memory-left">Left</button>
             </div>
-
-            <div class="side-panel">
-                <h4 style="font-size: 11px; color: #22d3ee">ПОСЛЕДНИЙ РЕЗУЛЬТАТ:</h4>
-                <div class="feedback-box" id="live-feedback">Приступайте к работе!</div>
-                <button onclick="resetMix()" style="padding:10px; background:#431407; border:none; color:white; border-radius:5px; cursor:pointer; font-size:11px">СБРОСИТЬ СОСТАВ</button>
-            </div>
+            <div class="panel-sub" id="memory-hint">—</div>
+          </div>
         </div>
+
+        <div id="step-1">
+          <h4 style="color:#22d3ee; margin-bottom:10px">STEP 1: SETUP</h4>
+          <div class="grid-select" id="glass-grid"></div>
+          <div class="grid-select" id="tool-grid"></div>
+          <button id="btn-step-2" class="finish-btn" data-action="step" data-step="2" disabled>GO TO POUR</button>
+        </div>
+
+        <div id="step-2" class="hidden">
+          <h4 style="color:#22d3ee; margin-bottom:10px">STEP 2: INGREDIENTS</h4>
+          <div id="tabs-bar" class="tabs"></div>
+          <div id="bottles-grid" class="bottles-grid"></div>
+          <div class="mix-box">IN GLASS: <span id="current-mix">Empty</span></div>
+          <button class="finish-btn" style="margin-top:10px" data-action="step" data-step="3">TO GARNISH</button>
+        </div>
+
+        <div id="step-3" class="hidden">
+          <h4 style="color:#22d3ee; margin-bottom:10px">STEP 3: GARNISH</h4>
+          <div class="grid-select" id="garnish-grid"></div>
+        </div>
+      </div>
+
+      <div class="side-panel">
+        <div class="panel-title">FEEDBACK</div>
+        <div id="feedback-list" class="feedback-list">
+          <div class="panel-sub">—</div>
+        </div>
+
+        <button data-action="reset-mix"
+                style="padding:10px; background:#431407; border:none; color:white; border-radius:12px; cursor:pointer; font-size:11px; font-weight:900;">
+          RESET BUILD
+        </button>
+      </div>
     </div>
+  </div>
+
+  <div id="screen-results" class="screen">
+    <div class="results-wrap">
+      <div class="results-card">
+        <h2 style="color:#22d3ee; margin-bottom: 6px;">🏁 Results</h2>
+        <div class="panel-sub" id="results-sub">—</div>
+
+        <div class="results-grid">
+          <div class="res-box">
+            <div class="res-h">⏱ Fastest</div>
+            <div class="res-p" id="res-fast">—</div>
+          </div>
+          <div class="res-box">
+            <div class="res-h">🐢 Slowest</div>
+            <div class="res-p" id="res-slow">—</div>
+          </div>
+          <div class="res-box">
+            <div class="res-h">❌ Most errors</div>
+            <div class="res-p" id="res-most-errors">—</div>
+          </div>
+          <div class="res-box">
+            <div class="res-h">📌 Recommendations</div>
+            <ul class="res-list" id="res-reco"></ul>
+          </div>
+        </div>
+
+        <div class="res-actions">
+          <button class="res-btn" data-action="back-menu">MENU</button>
+          <button class="res-btn" data-action="restart">RESTART</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="hint-box" class="hint-overlay"></div>
+
 <div class="controls-footer">
-    <button class="float-btn" onclick="toggleHint()">💡</button>
-    <button class="float-btn" onclick="toggleMusic()">🎵</button>
+  <button class="float-btn" data-action="toggle-hint" id="hint-btn">💡</button>
+  <button class="float-btn" data-action="toggle-music">🎵</button>
 </div>
 
 <audio id="audio-player" loop src="https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3"></audio>
 
 <script>
-    // --- ОБЪЕКТ РЕЦЕПТОВ (Тот самый пропущенный блок) ---
-    const recipes = {
-        // --- ШОТЫ ---
-        "B-52": { ing: {"Бейлис":20, "Кофейный ликер":20, "Апельсиновый ликер":20}, glass: "Shot", tool: "Layered", g: ["Нет"] },
-        "Uncle Bob": { ing: {"Водка":30, "Сироп Гренадин":10, "Лимонный сок":10}, glass: "Shot", tool: "Shaker", g: ["Нет"] },
-        "Fumari set": { ing: {"Водка":80, "Ананасовый сок":40, "Сироп Маракуйя":20, "Лимонный сок":10, "Мед":10}, glass: "Shot", tool: "Shaker", g: ["Нет"] },
+"use strict";
 
-        // --- КЛАССИКА IBA ---
-        "Negroni": { ing: {"Джин":30, "Кампари":30, "Мартини Россо":30}, glass: "Old Fashioned", tool: "Stir", g: ["Апельсин"] },
-        "Old Fashioned": { ing: {"Бурбон":45, "Ангостура":2, "Сахар":5}, glass: "Old Fashioned", tool: "Stir", g: ["Цедра лимона"] },
-        "Dry Martini": { ing: {"Джин":60, "Сухой вермут":10}, glass: "Martini Glass", tool: "Stir", g: ["Лимон"] },
-        "Whiskey Sour": { ing: {"Бурбон":45, "Лимонный сок":30, "Сахар":15, "Белок":20}, glass: "Old Fashioned", tool: "Shaker", g: ["Лимон"] },
-        "Margarita": { ing: {"Текила":35, "Апельсиновый ликер":20, "Лайм":15}, glass: "Margarita Glass", tool: "Shaker", g: ["Соляная кромка"] },
-        "Bloody Mary": { ing: {"Водка":45, "Томатный сок":90, "Лимонный сок":15, "Ворчестер":2, "Табаско":2}, glass: "Highball", tool: "Build", g: ["Лимон"] },
-        "Daiquiri": { ing: {"Ром":45, "Лайм":25, "Сахар":15}, glass: "Martini Glass", tool: "Shaker", g: ["Нет"] },
-        
-        // --- ПОПУЛЯРНОЕ ---
-        "Sex on the beach": { ing: {"Водка":40, "Персиковый ликер":20, "Клюквенный морс":40, "Ананасовый сок":40}, glass: "Highball", tool: "Build", g: ["Апельсин"] },
-        "Mojito Classic": { ing: {"Ром":50, "Содовая":100, "Лайм":20, "Мята":1, "Сахар":2}, glass: "Highball", tool: "Muddle", g: ["Мята"] },
-        "Aperol Spritz": { ing: {"Апероль":60, "Игристое вино":90, "Содовая":30}, glass: "Wine Glass", tool: "Build", g: ["Апельсин"] },
-        "Pina Colada": { ing: {"Ром":50, "Ананасовый сок":90, "Кокосовый сироп":20, "Лимонный сок":10}, glass: "Hurricane", tool: "Shaker", g: ["Ананас"] },
-        "Cosmopolitan": { ing: {"Водка":40, "Апельсиновый ликер":15, "Клюквенный морс":30, "Лимонный сок":10}, glass: "Martini Glass", tool: "Shaker", g: ["Цедра лимона"] },
-        "Long Island": { ing: {"Водка":15, "Ром":15, "Текила":15, "Джин":15, "Апельсиновый ликер":15, "Лимонный сок":20, "Пепси":50}, glass: "Highball", tool: "Build", g: ["Лимон"] },
-        "Dark 'n' Stormy": { ing: {"Золотой ром":60, "Содовая":100, "Лайм":10}, glass: "Highball", tool: "Build", g: ["Лайм"] },
-        "French Martini": { ing: {"Водка":45, "Малиновый ликер":15, "Ананасовый сок":15}, glass: "Martini Glass", tool: "Shaker", g: ["Цедра лимона"] }
-    };
+/** Settings */
+const VOLUME_TOLERANCE_ML = 5;
+const SPRINT_SECONDS = 300;
+const SPRINT_NORM_SEC = 30;
+const SPRINT_OVER_PENALTY_PER_SEC = 0.5;
 
-    // --- ИНГРЕДИЕНТЫ ---
-    const ingredients = {
-        "Алкоголь": ["Водка", "Ром", "Золотой ром", "Джин", "Текила", "Игристое вино", "Бурбон", "Виски"],
-        "Ликеры": ["Бейлис", "Кофейный ликер", "Апельсиновый ликер", "Дынный ликер", "Персиковый ликер", "Апероль", "Кампари", "Малиновый ликер", "Сухой вермут", "Мартини Россо"],
-        "Сиропы": ["Сироп Гренадин", "Сироп Блю Курасао", "Кокосовый сироп", "Миндальный сироп", "Сироп Маракуйя", "Сироп Манго", "Сироп Киви", "Мед", "Сахар", "Ангостура"],
-        "Соки/Миксы": ["Ананасовый сок", "Апельсиновый сок", "Персиковый сок", "Лимонный сок", "Клюквенный морс", "Содовая", "Пепси", "Молоко", "Томатный сок", "Белок", "Ворчестер", "Табаско"],
-        "Свежее": ["Лайм", "Мята", "Банан", "Киви", "Апельсин", "Лимон", "Ананас", "Цедра лимона", "Соляная кромка"]
-    };
+const MEMORY_ROUNDS = 3;
+const MEMORY_PER_ROUND = 5;
+const MEMORY_REVEAL_MS = 2500;
 
-    const ui = {
-        glasses: ["Shot", "Highball", "Martini Glass", "Margarita Glass", "Hurricane", "Wine Glass", "Old Fashioned"],
-        tools: ["Build", "Shaker", "Stir", "Layered", "Muddle"],
-        garnishes: ["Нет", "Лайм", "Мята", "Апельсин", "Лимон", "Ананас", "Соляная кромка", "Цедра лимона"]
-    };
+/** Allowed garnishes (English only, MUST match buttons) */
+const ALLOWED_GARNISHES = [
+  "None",
+  "Powdered sugar",
+  "Orange slice",
+  "Orange twist",
+  "Lemon twist",
+  "Lemon wheel",
+  "Lemon spiral",
+  "Lime wheel",
+  "Lime wedge",
+  "Lime twist",
+  "Mint sprig",
+  "Raspberry",
+  "Maraschino cherry",
+  "Cherry",
+  "Olive",
+  "Pineapple wedge",
+  "Nutmeg",
+  "Chocolate shavings",
+  "Coffee beans",
+  "Sugar rim",
+  "Angostura bitters",
+  "Optional mint leaf"
+];
 
-    let state = {
-        mode: '', time: 0, interval: null,
-        orders: [], currentIdx: 0,
-        build: { ing: {}, glass: '', tool: '' },
-        score: 0, history: [], startTime: 0
-    };
+/** UI selections */
+const ui = {
+  glasses: [
+    "Shot",
+    "Highball",
+    "Rocks",
+    "Coupe",
+    "Cocktail",
+    "Martini",
+    "Flute",
+    "Irish Coffee"
+  ],
+  tools: [
+    "Build",
+    "Build (layers)",
+    "Build, muddle",
+    "Muddle, build",
+    "Build, rinse",
+    "Stir",
+    "Shake",
+    "Shake (dry, wet)",
+    "Shake, top",
+    "Shake (dry, wet), top"
+  ]
+};
 
-    function toggleMusic() {
-        const p = document.getElementById('audio-player');
-        p.paused ? p.play().catch(()=>alert('Нажми еще раз или проверь файл music.mp3')) : p.pause();
+/**
+ * Ingredient unit meta:
+ * - ml: uses +1/+5/+10/+20
+ * - dash/tsp/egg/piece/rinse: uses +1 only
+ */
+const ingredientMeta = {
+    
+  "Egg White": { unit: "egg" },
+  "Egg Yolk": { unit: "egg" },
+  "Lime": { unit: "piece" },
+  "Sugar (tsp)": { unit: "tsp" },
+
+  "Angostura": { unit: "dash" },
+  "Orange Bitters": { unit: "dash" },
+  "Orange Flower Water": { unit: "dash" },
+  "Vanilla Bitters": { unit: "dash" },
+  "Absinthe (dashes)": { unit: "dash" },
+
+  "Absinthe (rinse)": { unit: "rinse" }
+};
+    
+const INGREDIENT_ALIASES = {
+  "Kahlua": "Coffee Liqueur",
+  "Cointreau": "Triple Sec",
+};
+
+/** Ingredient catalog */
+const ingredients = {
+  "Spirits": [
+    "Gin",
+    "Vodka",
+    "Rum",
+    "White Rum",
+    "Dark Rum",
+    "Cognac",
+    "Bourbon",
+    "Rye Whiskey",
+    "Scotch Whisky",
+    "Irish Whiskey",
+    "Tequila",
+    "Cachaca",
+    "Pisco"
+  ],
+  "Fortified / Wine": [
+    "Dry Vermouth",
+    "Sweet Vermouth",
+    "Lillet Blanc",
+    "Port Wine",
+    "Prosecco",
+    "Champagne",
+    "Sparkling Wine"
+  ],
+  "Liqueurs": [
+    "Campari",
+    "Triple Sec",
+    "Cointreau",
+    "Baileys",
+    "Coffee Liqueur",
+    "Kahlua",
+    "Maraschino",
+    "Creme de Violette",
+    "Creme de Cacao",
+    "Creme de Cacao (White)",
+    "Green Mint Liqueur",
+    "Creme de Menthe (Green)",
+    "Fernet-Branca",
+    "Green Chartreuse",
+    "Drambuie",
+    "Southern Comfort",
+    "Amaretto",
+    "Apricot Brandy",
+    "Calvados",
+    "Chambord",
+    "Blue Curacao",
+    "Creme de Cassis",
+    "Absinthe"
+  ],
+  "Juice / Mixers": [
+    "Lemon Juice",
+    "Lime Juice",
+    "Orange Juice",
+    "Pineapple Juice",
+    "Grapefruit Juice",
+    "Cranberry Juice",
+    "Soda",
+    "Ginger Beer",
+    "Cola",
+    "Lemonade",
+    "Espresso",
+    "Hot Coffee",
+    "Water"
+  ],
+  "Sweeteners": [
+    "Simple Syrup",
+    "Grenadine",
+    "Sugar",
+    "Sugar (tsp)",
+    "Raspberry Syrup"
+  ],
+  "Dairy / Puree": [
+    "Cream",
+    "Fresh Cream",
+    "Peach Puree"
+  ],
+  "Bitters / Aromatics": [
+    "Angostura",
+    "Orange Bitters",
+    "Orange Flower Water",
+    "Vanilla Bitters",
+    "Absinthe (dashes)",
+    "Absinthe (rinse)"
+  ],
+  "Other": [
+    "Mint Liqueur"
+  ]
+};
+
+/** Recipes (your list, normalized to English + arrays) */
+const recipes = {
+  "Alexander": { ing: { "Gin": 30, "Creme de Cacao": 30, "Cream": 30 }, glass: "Coupe", tool: "Shake", garnishes: ["Powdered sugar"] },
+  "Americano": { ing: { "Campari": 30, "Sweet Vermouth": 30, "Soda": 60 }, glass: "Highball", tool: "Build", garnishes: ["Orange slice"] },
+  "B-52": { ing: { "Coffee Liqueur": 20, "Baileys": 20, "Triple Sec": 20 }, glass: "Shot", tool: "Build (layers)", garnishes: ["None"] },
+  "Between the Sheets": { ing: { "Rum": 30, "Cognac": 30, "Triple Sec": 15, "Lemon Juice": 15 }, glass: "Coupe", tool: "Shake", garnishes: ["Lemon twist"] },
+  "Casino": { ing: { "Gin": 40, "Maraschino": 10, "Lemon Juice": 15, "Orange Bitters": 2 }, glass: "Coupe", tool: "Shake", garnishes: ["Maraschino cherry"] },
+  "Clover Club": { ing: { "Gin": 45, "Raspberry Syrup": 15, "Lemon Juice": 15, "Egg White": 1 }, glass: "Coupe", tool: "Shake (dry, wet)", garnishes: ["Raspberry"] },
+  "Daiquiri": { ing: { "White Rum": 50, "Lime Juice": 20, "Simple Syrup": 15 }, glass: "Coupe", tool: "Shake", garnishes: ["Lime wheel"] },
+  "Derby": { ing: { "Gin": 60, "Mint Liqueur": 10, "Orange Bitters": 2 }, glass: "Cocktail", tool: "Stir", garnishes: ["Mint sprig"] },
+  "Dry Martini": { ing: { "Gin": 60, "Dry Vermouth": 10 }, glass: "Martini", tool: "Stir", garnishes: ["Olive", "Lemon twist"] },
+  "Gin Fizz": { ing: { "Gin": 45, "Simple Syrup": 15, "Lemon Juice": 20, "Soda": 90, "Egg White": 1 }, glass: "Highball", tool: "Shake, top", garnishes: ["Lemon wheel"] },
+  "Grasshopper": { ing: { "Green Mint Liqueur": 30, "Creme de Cacao": 30, "Cream": 30 }, glass: "Coupe", tool: "Shake", garnishes: ["Chocolate shavings"] },
+  "Hanky Panky": { ing: { "Gin": 30, "Sweet Vermouth": 30, "Fernet-Branca": 10 }, glass: "Coupe", tool: "Stir", garnishes: ["Orange twist"] },
+  "John Collins": { ing: { "Gin": 45, "Lemon Juice": 25, "Simple Syrup": 20, "Soda": 90 }, glass: "Highball", tool: "Build", garnishes: ["Orange slice", "Cherry"] },
+  "Last Word": { ing: { "Gin": 20, "Green Chartreuse": 20, "Maraschino": 20, "Lime Juice": 20 }, glass: "Coupe", tool: "Shake", garnishes: ["Lime twist"] },
+  "Manhattan": { ing: { "Rye Whiskey": 50, "Sweet Vermouth": 20, "Angostura": 2 }, glass: "Coupe", tool: "Stir", garnishes: ["Cherry"] },
+  "Mary Pickford": { ing: { "White Rum": 45, "Pineapple Juice": 45, "Maraschino": 15, "Grenadine": 5, "Lime Juice": 10 }, glass: "Coupe", tool: "Shake", garnishes: ["Pineapple wedge"] },
+  "Monkey Gland": { ing: { "Gin": 45, "Orange Juice": 15, "Grenadine": 15, "Absinthe": 5 }, glass: "Coupe", tool: "Shake", garnishes: ["Orange twist"] },
+  "Negroni": { ing: { "Gin": 30, "Campari": 30, "Sweet Vermouth": 30 }, glass: "Rocks", tool: "Stir", garnishes: ["Orange twist"] },
+  "Old Fashioned": { ing: { "Bourbon": 50, "Sugar": 10, "Angostura": 3, "Water": 10 }, glass: "Rocks", tool: "Build, muddle", garnishes: ["Orange twist"] },
+  "Paradise": { ing: { "Gin": 30, "Apricot Brandy": 15, "Pineapple Juice": 45 }, glass: "Coupe", tool: "Shake", garnishes: ["Pineapple wedge"] },
+  "Planter's Punch": { ing: { "Dark Rum": 45, "Orange Juice": 30, "Lemon Juice": 20, "Simple Syrup": 15, "Grenadine": 10 }, glass: "Highball", tool: "Shake", garnishes: ["Orange slice", "Cherry"] },
+  "Porto Flip": { ing: { "Cognac": 35, "Port Wine": 35, "Egg Yolk": 1 }, glass: "Coupe", tool: "Shake", garnishes: ["Nutmeg"] },
+  "Ramos Gin Fizz": { ing: { "Gin": 45, "Cream": 30, "Lemon Juice": 15, "Lime Juice": 15, "Simple Syrup": 20, "Orange Flower Water": 3, "Vanilla Bitters": 3, "Egg White": 1, "Soda": 90 }, glass: "Highball", tool: "Shake (dry, wet), top", garnishes: ["None"] },
+  "Rusty Nail": { ing: { "Scotch Whisky": 50, "Drambuie": 25 }, glass: "Rocks", tool: "Build", garnishes: ["Lemon twist"] },
+  "Sazerac": { ing: { "Rye Whiskey": 60, "Sugar": 10, "Angostura": 3, "Absinthe (rinse)": 1 }, glass: "Rocks", tool: "Build, rinse", garnishes: ["Lemon twist"] },
+  "Sidecar": { ing: { "Cognac": 50, "Triple Sec": 20, "Lemon Juice": 20 }, glass: "Coupe", tool: "Shake", garnishes: ["Sugar rim", "Lemon twist"] },
+
+  "Adventure": { ing: { "Gin": 45, "Maraschino": 15, "Grenadine": 10, "Lemon Juice": 15 }, glass: "Coupe", tool: "Shake", garnishes: ["Maraschino cherry"] },
+  "Affinity": { ing: { "Scotch Whisky": 50, "Dry Vermouth": 25, "Sweet Vermouth": 15, "Orange Bitters": 2 }, glass: "Coupe", tool: "Stir", garnishes: ["Lemon twist"] },
+  "Alabama Slammer": { ing: { "Southern Comfort": 25, "Amaretto": 25, "Soda": 50, "Grenadine": 5 }, glass: "Highball", tool: "Build", garnishes: ["Orange slice"] },
+  "Amaretto Sour": { ing: { "Amaretto": 45, "Lemon Juice": 25, "Egg White": 1, "Soda": 30 }, glass: "Rocks", tool: "Shake, top", garnishes: ["Cherry"] },
+  "Angel Face": { ing: { "Gin": 30, "Calvados": 30, "Apricot Brandy": 30 }, glass: "Coupe", tool: "Stir", garnishes: ["Orange twist"] },
+  "Aviation": { ing: { "Gin": 45, "Maraschino": 10, "Lemon Juice": 15, "Creme de Violette": 10 }, glass: "Coupe", tool: "Shake", garnishes: ["Maraschino cherry"] },
+  "Bacardi": { ing: { "White Rum": 50, "Lime Juice": 20, "Simple Syrup": 10, "Grenadine": 5 }, glass: "Coupe", tool: "Shake", garnishes: ["Lemon twist"] },
+  "Balalaika": { ing: { "Vodka": 40, "Cointreau": 20, "Lime Juice": 20 }, glass: "Coupe", tool: "Shake", garnishes: ["Lime twist"] },
+  "Bellini": { ing: { "Peach Puree": 50, "Prosecco": 100 }, glass: "Flute", tool: "Build", garnishes: ["None"] },
+  "Blue Lagoon": { ing: { "Vodka": 30, "Blue Curacao": 30, "Lemonade": 120 }, glass: "Highball", tool: "Build", garnishes: ["Orange slice"] },
+  "Boulevardier": { ing: { "Bourbon": 45, "Campari": 30, "Sweet Vermouth": 30 }, glass: "Rocks", tool: "Stir", garnishes: ["Orange twist"] },
+  "Bronx": { ing: { "Gin": 45, "Sweet Vermouth": 15, "Dry Vermouth": 15, "Orange Juice": 30 }, glass: "Coupe", tool: "Shake", garnishes: ["Orange twist"] },
+  "Caipirinha": { ing: { "Cachaca": 50, "Lime": 1, "Sugar (tsp)": 3 }, glass: "Rocks", tool: "Muddle, build", garnishes: ["Lime wedge"] },
+  "Caipiroska": { ing: { "Vodka": 50, "Lime": 1, "Sugar (tsp)": 3 }, glass: "Rocks", tool: "Muddle, build", garnishes: ["Lime wedge"] },
+  "Corpse Reviver #2": { ing: { "Gin": 30, "Cointreau": 30, "Lillet Blanc": 30, "Absinthe (dashes)": 5, "Lemon Juice": 30 }, glass: "Coupe", tool: "Shake", garnishes: ["Cherry"] },
+  "Cosmopolitan": { ing: { "Vodka": 40, "Cointreau": 20, "Cranberry Juice": 30, "Lime Juice": 15 }, glass: "Martini", tool: "Shake", garnishes: ["Lime twist"] },
+  "Cuba Libre": { ing: { "White Rum": 50, "Lime Juice": 20, "Cola": 120 }, glass: "Highball", tool: "Build", garnishes: ["Lime wedge"] },
+
+  "Dark 'n' Stormy": { ing: { "Dark Rum": 60, "Ginger Beer": 120, "Lime Juice": 20 }, glass: "Highball", tool: "Build", garnishes: ["Lime wedge"] },
+  "Espresso Martini": { ing: { "Vodka": 50, "Coffee Liqueur": 20, "Espresso": 30, "Simple Syrup": 10 }, glass: "Martini", tool: "Shake", garnishes: ["Coffee beans"] },
+  "French 75": { ing: { "Gin": 30, "Lemon Juice": 15, "Simple Syrup": 10, "Champagne": 60 }, glass: "Flute", tool: "Shake, top", garnishes: ["Lemon twist"] },
+  "French Martini": { ing: { "Vodka": 45, "Chambord": 15, "Pineapple Juice": 30 }, glass: "Martini", tool: "Shake", garnishes: ["Raspberry"] },
+  "Godfather": { ing: { "Scotch Whisky": 50, "Amaretto": 20 }, glass: "Rocks", tool: "Build", garnishes: ["None"] },
+  "Hemingway Special": { ing: { "White Rum": 40, "Maraschino": 10, "Grapefruit Juice": 20, "Lime Juice": 15 }, glass: "Highball", tool: "Shake", garnishes: ["None"] },
+  "Horse's Neck": { ing: { "Bourbon": 50, "Ginger Beer": 120, "Lemon Juice": 10 }, glass: "Highball", tool: "Build", garnishes: ["Lemon spiral"] },
+  "Irish Coffee": { ing: { "Irish Whiskey": 45, "Hot Coffee": 120, "Simple Syrup": 15, "Cream": 30 }, glass: "Irish Coffee", tool: "Build", garnishes: ["None"] },
+  "Kamikaze": { ing: { "Vodka": 30, "Triple Sec": 30, "Lime Juice": 30 }, glass: "Coupe", tool: "Shake", garnishes: ["Lime twist"] },
+  "Kir Royale": { ing: { "Creme de Cassis": 10, "Sparkling Wine": 90 }, glass: "Flute", tool: "Build", garnishes: ["Lemon twist"] },
+  "Lemon Drop Martini": { ing: { "Vodka": 50, "Triple Sec": 20, "Lemon Juice": 25 }, glass: "Martini", tool: "Shake", garnishes: ["Sugar rim"] },
+  "Pisco Sour": { ing: { "Pisco": 60, "Lemon Juice": 30, "Simple Syrup": 20, "Egg White": 1, "Angostura": 2 }, glass: "Coupe", tool: "Shake", garnishes: ["Angostura bitters"] },
+  "Tequila Sunrise": { ing: { "Tequila": 50, "Orange Juice": 120, "Grenadine": 15 }, glass: "Highball", tool: "Build", garnishes: ["Orange slice", "Cherry"] },
+  "Vesper": { ing: { "Gin": 60, "Vodka": 15, "Lillet Blanc": 30 }, glass: "Martini", tool: "Stir", garnishes: ["Lemon twist"] },
+  "White Russian": { ing: { "Vodka": 50, "Kahlua": 20, "Cream": 30 }, glass: "Rocks", tool: "Build", garnishes: ["None"] },
+
+  "Grasshopper (Alt)": { ing: { "Creme de Cacao (White)": 20, "Creme de Menthe (Green)": 20, "Fresh Cream": 20 }, glass: "Coupe", tool: "Shake", garnishes: ["Optional mint leaf"] }
+};
+
+/** Game modes */
+const GAME_MODES = {
+  random20: { label:"🎲 RANDOM 20", showHints:true, timed:false, durationSec:0, failOnError:false },
+  sprint5:  { label:"⚡ SPRINT 5:00", showHints:true, timed:true,  durationSec:SPRINT_SECONDS, failOnError:false },
+  marathon: { label:"🏁 MARATHON", showHints:true, timed:false, durationSec:0, failOnError:false },
+  exam:     { label:"🎓 EXAM", showHints:false, timed:false, durationSec:0, failOnError:true },
+  memory:   { label:"🧠 MEMORY", showHints:true, timed:false, durationSec:0, failOnError:false },
+  training: { label:"🧩 TRAINING", showHints:true, timed:false, durationSec:0, failOnError:false }
+};
+
+const state = {
+  modeId: "",
+  mode: null,
+  interval: null,
+  finished: false,
+
+  timeLeft: 0,
+  gameStartTs: 0,
+
+  orders: [],
+  currentIdx: 0,
+  score: 0,
+
+  build: { ing: {}, glass: "", tool: "" },
+  orderStartTs: 0,
+
+  hintUsesByKey: new Map(),
+  results: [],
+  lastModeId: null,
+
+  // training
+  trainingName: null,
+  trainingRepGoal: 5,
+  trainingRepDone: 0,
+  trainingBestMs: null,
+  trainingAttemptActive: false,
+  trainingAttemptStartTs: 0,
+  trainingMetrics: null,
+  trainingOpt: null,
+  trainingLiveTimer: null,
+
+  // memory
+  memoryQueue: [],
+  memoryActiveKey: null,
+
+  headerTimer: null
+};
+
+const $ = (id) => document.getElementById(id);
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function fmtTimeSec(totalSec) {
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m}:${s < 10 ? "0" : ""}${s}`;
+}
+
+function fmtDurationMs(ms) {
+  const sec = Math.max(0, Math.round(ms / 1000));
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  if (m <= 0) return `${sec}s`;
+  return `${m}m ${s < 10 ? "0" : ""}${s}s`;
+}
+
+function stopHeaderTimer() {
+  if (state.headerTimer) clearInterval(state.headerTimer);
+  state.headerTimer = null;
+}
+
+function startHeaderTimer(getElapsedMs) {
+  stopHeaderTimer();
+  state.headerTimer = setInterval(() => {
+    const sec = Math.max(0, Math.floor(getElapsedMs() / 1000));
+    $("timer").textContent = fmtTimeSec(sec);
+  }, 200);
+}
+
+function toggleMusic() {
+  const p = $("audio-player");
+  if (p.paused) p.play().catch(() => alert("Click once to enable audio"));
+  else p.pause();
+}
+
+function showScreen(id) {
+  ["screen-menu","screen-game","screen-results"].forEach(s => $(s).classList.remove("active"));
+  $(id).classList.add("active");
+}
+
+function incHintUse(key) {
+  state.hintUsesByKey.set(key, (state.hintUsesByKey.get(key) || 0) + 1);
+}
+function getHintUses(key) {
+  return state.hintUsesByKey.get(key) || 0;
+}
+
+function normalizeToArrayGarnish(g) {
+  if (!g) return ["None"];
+  if (Array.isArray(g)) return g;
+  if (typeof g === "string") {
+    const raw = g.trim();
+    if (!raw) return ["None"];
+    if (raw.toLowerCase() === "no") return ["None"];
+    if (raw.includes(",")) return raw.split(",").map(x => x.trim()).filter(Boolean);
+    if (raw.includes(" or ")) return raw.split(" or ").map(x => x.trim()).filter(Boolean);
+    return [raw];
+  }
+  return ["None"];
+}
+
+/** Double-check + auto-fix without losing recipes */
+function dataIntegrityCheckAndFix() {
+  // Normalize garnishes and ensure allowed
+  for (const [name, r] of Object.entries(recipes)) {
+    r.garnishes = normalizeToArrayGarnish(r.garnishes).map(x => x === "NO" ? "None" : x);
+    r.garnishes = r.garnishes.map(g => (ALLOWED_GARNISHES.includes(g) ? g : "None"));
+    if (!r.garnishes.length) r.garnishes = ["None"];
+
+    if (!ui.glasses.includes(r.glass)) console.warn(`[missing glass] ${name}: ${r.glass}`);
+    if (!ui.tools.includes(r.tool)) console.warn(`[missing tool] ${name}: ${r.tool}`);
+  }
+
+  const allIng = new Set(Object.values(ingredients).flat());
+  for (const [name, r] of Object.entries(recipes)) {
+    for (const ing of Object.keys(r.ing || {})) {
+      if (!allIng.has(ing)) {
+        console.warn(`[missing ingredient in catalog] ${name}: "${ing}" -> added to Other`);
+        ingredients["Other"].push(ing);
+        allIng.add(ing);
+      }
     }
+  }
 
-    function startGame(mode, sec = 0) {
-        if (state.interval) clearInterval(state.interval);
-        state.mode = mode;
-        state.time = sec;
-        state.orders = mode === 'work' ? Object.keys(recipes).sort(()=>Math.random()-0.5) : Object.keys(recipes);
-        state.currentIdx = 0;
-        state.score = 0;
-        state.history = [];
-        state.startTime = Date.now();
-
-        document.getElementById('screen-menu').classList.remove('active');
-        document.getElementById('screen-game').classList.add('active');
-        document.getElementById('display-mode').innerText = mode === 'work' ? 'СЕССИЯ' : 'МАРАФОН';
-        
-        renderUI();
-        loadNextOrder();
-        
-        if(mode === 'work') {
-            updateTimerDisplay();
-            startTimer();
-        } else {
-            document.getElementById('timer').innerText = "00:00";
-            startMarathonTimer();
-        }
+  // Audit garnishes
+  for (const [name, r] of Object.entries(recipes)) {
+    for (const g of r.garnishes) {
+      if (!ALLOWED_GARNISHES.includes(g)) console.warn(`[missing garnish] ${name}: "${g}"`);
     }
+  }
+}
 
-    function startTimer() {
-        state.interval = setInterval(() => {
-            state.time--;
-            updateTimerDisplay();
-            if(state.time <= 0) finishGame("Время вышло!");
-        }, 1000);
+function auditData() {
+  const allIngredients = new Set(Object.values(ingredients).flat());
+  const missingIngredients = new Map();
+  const missingGlasses = new Map();
+  const missingTools = new Map();
+  const missingGarnishes = new Map();
+
+  for (const [name, r] of Object.entries(recipes)) {
+    for (const ing of Object.keys(r.ing || {})) {
+      if (!allIngredients.has(ing)) {
+        if (!missingIngredients.has(name)) missingIngredients.set(name, []);
+        missingIngredients.get(name).push(ing);
+      }
     }
-
-    function startMarathonTimer() {
-        state.interval = setInterval(() => {
-            const diff = Math.floor((Date.now() - state.startTime) / 1000);
-            const m = Math.floor(diff / 60), s = diff % 60;
-            document.getElementById('timer').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-        }, 1000);
+    if (r.glass && !ui.glasses.includes(r.glass)) missingGlasses.set(name, r.glass);
+    if (r.tool && !ui.tools.includes(r.tool)) missingTools.set(name, r.tool);
+    for (const g of (r.garnishes || [])) {
+      if (g && !ALLOWED_GARNISHES.includes(g)) {
+        if (!missingGarnishes.has(name)) missingGarnishes.set(name, []);
+        missingGarnishes.get(name).push(g);
+      }
     }
+  }
 
-    function updateTimerDisplay() {
-        let m = Math.floor(state.time / 60), s = state.time % 60;
-        document.getElementById('timer').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+  console.log("AUDIT missing ingredients by cocktail:", Object.fromEntries(missingIngredients));
+  console.log("AUDIT missing glasses by cocktail:", Object.fromEntries(missingGlasses));
+  console.log("AUDIT missing tools by cocktail:", Object.fromEntries(missingTools));
+  console.log("AUDIT missing garnishes by cocktail:", Object.fromEntries(missingGarnishes));
+}
+
+function updateStep2Lock() {
+  $("btn-step-2").disabled = !(state.build.glass && state.build.tool);
+}
+
+function resetMix() {
+  state.build = { ing: {}, glass: "", tool: "" };
+  $("current-mix").innerText = "Empty";
+  $("glass-grid").querySelectorAll(".select-btn").forEach(b => b.classList.remove("active"));
+  $("tool-grid").querySelectorAll(".select-btn").forEach(b => b.classList.remove("active"));
+  updateStep2Lock();
+}
+
+function changeStep(stepNum) {
+  ["step-1","step-2","step-3"].forEach(id => $(id).classList.add("hidden"));
+  $(`step-${stepNum}`).classList.remove("hidden");
+}
+
+function addIng(name, amt) {
+  state.build.ing[name] = (state.build.ing[name] || 0) + amt;
+  const parts = Object.entries(state.build.ing).map(([i, vol]) => `${i}(${vol})`);
+  $("current-mix").innerText = parts.length ? parts.join(", ") : "Empty";
+}
+
+function selectAttr(key, value, btnEl) {
+  state.build[key] = value;
+  const container = key === "glass" ? $("glass-grid") : $("tool-grid");
+  container.querySelectorAll(".select-btn").forEach(b => b.classList.remove("active"));
+  btnEl.classList.add("active");
+  updateStep2Lock();
+}
+
+function renderStaticUI() {
+  // glasses
+  $("glass-grid").innerHTML = ui.glasses.map(g =>
+    `<button class="select-btn" data-action="select-attr" data-key="glass" data-value="${escapeHtml(g)}">${escapeHtml(g)}</button>`
+  ).join("");
+
+  // tools
+  $("tool-grid").innerHTML = ui.tools.map(t =>
+    `<button class="select-btn" data-action="select-attr" data-key="tool" data-value="${escapeHtml(t)}">${escapeHtml(t)}</button>`
+  ).join("");
+
+  // garnishes (submit)
+  $("garnish-grid").innerHTML = ALLOWED_GARNISHES.map(g =>
+    `<button class="select-btn" data-action="submit" data-garnish="${escapeHtml(g)}">${escapeHtml(g)}</button>`
+  ).join("");
+
+  // tabs
+  const tabs = Object.keys(ingredients);
+  $("tabs-bar").innerHTML = tabs.map((cat, idx) =>
+    `<button class="tab-btn ${idx === 0 ? "active" : ""}" data-action="tab" data-cat="${escapeHtml(cat)}">${escapeHtml(cat)}</button>`
+  ).join("");
+  renderBottles(tabs[0]);
+  updateStep2Lock();
+
+  // training select
+  const sel = $("training-select");
+  sel.innerHTML = Object.keys(recipes).sort((a,b)=>a.localeCompare(b))
+    .map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("");
+}
+
+function renderBottles(cat) {
+  const list = (ingredients[cat] || []);
+  $("bottles-grid").innerHTML = list.map(ing => {
+    const unit = ingredientMeta[ing]?.unit || "ml";
+    const amts = unit === "ml" ? [1,5,10,20] : [1];
+    const buttons = amts.map(a => {
+      const label = unit === "ml" ? `+${a}ml` : `+${a}`;
+      return `<button class="pour-btn" data-action="pour" data-ing="${escapeHtml(ing)}" data-amt="${a}">${label}</button>`;
+    }).join("");
+    return `
+      <div class="bottle-card">
+        <div style="font-size:10px; min-height:24px; overflow:hidden">${escapeHtml(ing)}</div>
+        <div class="pour-row">${buttons}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function getIngredientCategory(ing) {
+  for (const [cat, items] of Object.entries(ingredients)) if (items.includes(ing)) return cat;
+  return "Other";
+}
+
+const POUR_STEPS = [20,10,5,1];
+function minPourClicksForMlWithTolerance(targetMl) {
+  const lo = Math.max(0, targetMl - VOLUME_TOLERANCE_ML);
+  const hi = targetMl + VOLUME_TOLERANCE_ML;
+  let best = Infinity;
+  const maxClicks = 10;
+
+  function dfs(sum, clicks) {
+    if (clicks >= best) return;
+    if (sum >= lo && sum <= hi) { best = clicks; return; }
+    if (sum > hi) return;
+    if (clicks >= maxClicks) return;
+    for (const step of POUR_STEPS) dfs(sum + step, clicks + 1);
+  }
+  dfs(0, 0);
+  return best === Infinity ? maxClicks : best;
+}
+
+function computeOptimalForCocktail(name) {
+  const r = recipes[name];
+  const neededCats = new Set();
+  let optPour = 0;
+
+  for (const [ing, expected] of Object.entries(r.ing)) {
+    const unit = ingredientMeta[ing]?.unit || "ml";
+    if (unit === "ml") optPour += minPourClicksForMlWithTolerance(expected);
+    else optPour += expected;
+    neededCats.add(getIngredientCategory(ing));
+  }
+
+  const tabs = Object.keys(ingredients);
+  const defaultTab = tabs[0];
+  const distinct = neededCats.size;
+  const optTabs = distinct <= 1 ? (neededCats.has(defaultTab) ? 0 : (distinct === 0 ? 0 : 1))
+                                : (neededCats.has(defaultTab) ? (distinct - 1) : distinct);
+
+  const optTotal = 1 + 1 + 2 + optTabs + optPour + 1;
+  return { optPour, optTabs, optTotal };
+}
+
+function validateBuild(target, garnishPicked) {
+  const errs = [];
+  const b = state.build;
+
+  if (b.glass !== target.glass) errs.push({ type:"glass", msg:`Glass (need ${target.glass})` });
+  if (b.tool !== target.tool) errs.push({ type:"tool", msg:`Method (need ${target.tool})` });
+  if (!target.garnishes.includes(garnishPicked)) errs.push({ type:"garnish", msg:`Garnish (need ${target.garnishes.join(" or ")})` });
+
+  for (const [ing, expected] of Object.entries(target.ing)) {
+    const actual = b.ing[ing] || 0;
+    const unit = ingredientMeta[ing]?.unit || "ml";
+
+    if (unit === "ml") {
+      if (Math.abs(actual - expected) > VOLUME_TOLERANCE_ML) errs.push({ type:"volume", msg:`${ing}: ${actual}/${expected}ml (±${VOLUME_TOLERANCE_ML})` });
+    } else {
+      if (actual !== expected) errs.push({ type:"volume", msg:`${ing}: ${actual}/${expected}` });
     }
+  }
 
-    function renderUI() {
-        document.getElementById('glass-grid').innerHTML = ui.glasses.map(g => `<button class="select-btn" onclick="selectAttr('glass', '${g}', this)">${g}</button>`).join('');
-        document.getElementById('tool-grid').innerHTML = ui.tools.map(t => `<button class="select-btn" onclick="selectAttr('tool', '${t}', this)">${t}</button>`).join('');
-        document.getElementById('garnish-grid').innerHTML = ui.garnishes.map(g => `<button class="select-btn" onclick="submitCocktail('${g}')">${g}</button>`).join('');
-        
-        const tabs = Object.keys(ingredients);
-        document.getElementById('tabs-bar').innerHTML = tabs.map(t => `<button class="select-btn" style="width:auto; margin-right:5px" onclick="renderBottles('${t}')">${t}</button>`).join('');
-        renderBottles(tabs[0]);
+  for (const ing of Object.keys(b.ing)) {
+    if (!(ing in target.ing)) errs.push({ type:"extra", msg:`Extra ingredient: ${ing}` });
+  }
+
+  return errs;
+}
+
+function computeQuality(errs) {
+  let q = 100;
+  const c = errs.reduce((m, e) => (m[e.type] = (m[e.type] || 0) + 1, m), {});
+  q -= (c.volume || 0) * 5;
+  q -= (c.extra || 0) * 5;
+  if (c.tool) q -= 10;
+  if (c.glass) q -= 10;
+  if (c.garnish) q -= 10;
+  return Math.max(0, Math.round(q));
+}
+
+function applySprintTimePenalty(quality, durationMs) {
+  if (state.modeId !== "sprint5") return quality;
+  const sec = Math.round(durationMs / 1000);
+  if (sec <= SPRINT_NORM_SEC) return quality;
+  const over = sec - SPRINT_NORM_SEC;
+  return Math.max(0, Math.round(quality - over * SPRINT_OVER_PENALTY_PER_SEC));
+}
+
+function appendFeedbackCard({ title, ok, lines, errors, hintUses }) {
+  const list = $("feedback-list");
+  const first = list.firstElementChild;
+  if (first && first.classList.contains("panel-sub")) list.removeChild(first);
+
+  const card = document.createElement("div");
+  card.className = "fb-card";
+
+  const head = document.createElement("div");
+  head.className = "fb-head";
+
+  const nm = document.createElement("div");
+  nm.className = "fb-name";
+  nm.textContent = title;
+
+  const badge = document.createElement("div");
+  badge.className = `fb-badge ${ok ? "badge-ok" : "badge-bad"}`;
+  badge.textContent = ok ? "✅ OK" : "❌ Errors";
+
+  head.appendChild(nm);
+  head.appendChild(badge);
+  card.appendChild(head);
+
+  for (const l of (lines || [])) {
+    const d = document.createElement("div");
+    d.className = "fb-line";
+    d.textContent = l;
+    card.appendChild(d);
+  }
+
+  const hu = document.createElement("div");
+  hu.className = "fb-line";
+  hu.textContent = `💡 Hints used: ${hintUses ?? 0}`;
+  card.appendChild(hu);
+
+  if (errors?.length) {
+    const errsEl = document.createElement("div");
+    errsEl.className = "fb-errs";
+    errsEl.textContent = "Errors:";
+    const ul = document.createElement("ul");
+    for (const msg of errors) {
+      const li = document.createElement("li");
+      li.textContent = msg;
+      ul.appendChild(li);
     }
+    errsEl.appendChild(ul);
+    card.appendChild(errsEl);
+  }
 
-    function loadNextOrder() {
-        const name = state.orders[state.currentIdx];
-        document.getElementById('order-name').innerText = name;
-        document.getElementById('score-counter').innerText = `${state.score}/${state.orders.length}`;
-        
-        const r = recipes[name];
-        let h = `<b>РЕЦЕПТ: ${name}</b>\n`;
-        for(let [i, v] of Object.entries(r.ing)) h += `• ${i}: ${v}ml\n`;
-        h += `\nБокал: ${r.glass}\nМетод: ${r.tool}\nГарнир: ${r.g[0]}`;
-        document.getElementById('hint-box').innerHTML = h;
-        
-        resetMix();
-        changeStep(1);
+  list.appendChild(card);
+  list.scrollTop = list.scrollHeight;
+}
+
+function buildHintText(name) {
+  const r = recipes[name];
+  const lines = [];
+  lines.push(`RECIPE: ${name}\n`);
+  for (const [ing, val] of Object.entries(r.ing)) {
+    const unit = ingredientMeta[ing]?.unit || "ml";
+    if (unit === "ml") lines.push(`• ${ing}: ${val} ml`);
+    else if (unit === "dash") lines.push(`• ${ing}: ${val} dashes`);
+    else if (unit === "tsp") lines.push(`• ${ing}: ${val} tsp`);
+    else if (unit === "egg") lines.push(`• ${ing}: ${val}`);
+    else if (unit === "piece") lines.push(`• ${ing}: ${val}`);
+    else if (unit === "rinse") lines.push(`• ${ing}: rinse`);
+    else lines.push(`• ${ing}: ${val}`);
+  }
+  lines.push(`\nGlass: ${r.glass}`);
+  lines.push(`Method: ${r.tool}`);
+  lines.push(`Garnish: ${r.garnishes.join(" or ")}`);
+  return lines.join("\n");
+}
+
+function toggleHint() {
+  if (!state.mode?.showHints) return;
+  const h = $("hint-box");
+  const willOpen = h.style.display !== "block";
+
+  const key =
+    state.modeId === "training" ? state.trainingName :
+    state.modeId === "memory" ? state.memoryActiveKey :
+    $("order-name").textContent;
+
+  if (!key || !recipes[key]) return;
+
+  if (willOpen) {
+    incHintUse(key);
+    h.textContent = buildHintText(key);
+  }
+  h.style.display = willOpen ? "block" : "none";
+}
+
+function setupModeUI(modeId) {
+  state.modeId = modeId;
+  state.mode = GAME_MODES[modeId];
+  state.lastModeId = modeId;
+  state.finished = false;
+
+  $("training-screen").classList.toggle("hidden", modeId !== "training");
+  $("memory-box").classList.toggle("hidden", modeId !== "memory");
+
+  $("display-mode").textContent = state.mode.label;
+  $("sprint-norm").classList.toggle("hidden", modeId !== "sprint5");
+  $("hint-btn").disabled = !state.mode.showHints;
+
+  $("feedback-list").innerHTML = `<div class="panel-sub">—</div>`;
+
+  stopHeaderTimer();
+  if (state.interval) clearInterval(state.interval);
+  state.interval = null;
+
+  if (state.mode.timed) {
+    state.timeLeft = state.mode.durationSec;
+    $("timer").textContent = fmtTimeSec(state.timeLeft);
+    state.interval = setInterval(() => {
+      if (state.finished) return;
+      state.timeLeft -= 1;
+      $("timer").textContent = fmtTimeSec(Math.max(0, state.timeLeft));
+      if (state.timeLeft <= 0) finishGame("Time is up!");
+    }, 1000);
+  } else {
+    state.gameStartTs = Date.now();
+    startHeaderTimer(() => Date.now() - state.gameStartTs);
+  }
+
+  if (modeId === "training") $("score-counter").textContent = "—";
+  else if (modeId === "sprint5") $("score-counter").textContent = "0";
+  else $("score-counter").textContent = "0/0";
+}
+
+function startGame(modeId) {
+  showScreen("screen-game");
+  setupModeUI(modeId);
+
+  state.hintUsesByKey = new Map();
+  state.results = [];
+  state.score = 0;
+  state.currentIdx = 0;
+  state.orders = [];
+  state.memoryQueue = [];
+  state.memoryActiveKey = null;
+
+  resetMix();
+  changeStep(1);
+
+  const all = Object.keys(recipes);
+
+  if (modeId === "training") return initTraining();
+  if (modeId === "memory") return initMemory(all);
+
+  if (modeId === "random20") state.orders = shuffle([...all]).slice(0, 20);
+  else if (modeId === "marathon") state.orders = [...all];
+  else if (modeId === "exam") state.orders = shuffle([...all]);
+  else if (modeId === "sprint5") state.orders = shuffle([...all]);
+
+  loadNextOrder();
+}
+
+function loadNextOrder() {
+  if (state.finished) return;
+
+  if (state.modeId === "sprint5") {
+    const all = Object.keys(recipes);
+    const name = all[Math.floor(Math.random() * all.length)];
+    $("order-name").textContent = name;
+    state.orderStartTs = Date.now();
+    resetMix();
+    changeStep(1);
+    return;
+  }
+
+  const name = state.orders[state.currentIdx];
+  $("order-name").textContent = name || "---";
+  if (!name) return finishGame("All done!");
+
+  state.orderStartTs = Date.now();
+  resetMix();
+  changeStep(1);
+
+  $("score-counter").textContent = `${state.score}/${state.orders.length}`;
+}
+
+function finishGame(reason) {
+  if (state.finished) return;
+  state.finished = true;
+
+  if (state.interval) clearInterval(state.interval);
+  state.interval = null;
+  stopHeaderTimer();
+  $("hint-box").style.display = "none";
+
+  const fastest = state.results.filter(r => r.durationMs != null).sort((a,b)=>a.durationMs-b.durationMs)[0] || null;
+  const slowest = state.results.filter(r => r.durationMs != null).sort((a,b)=>b.durationMs-a.durationMs)[0] || null;
+
+  const errorCounts = new Map();
+  for (const r of state.results) {
+    const n = errorCounts.get(r.name) || 0;
+    errorCounts.set(r.name, n + (r.errors?.length || 0));
+  }
+  let mostErrName = null;
+  let mostErrVal = -1;
+  for (const [k,v] of errorCounts.entries()) {
+    if (v > mostErrVal) { mostErrVal = v; mostErrName = k; }
+  }
+
+  $("results-sub").textContent = `${reason} • Score: ${state.score} • Served: ${state.results.length}`;
+  $("res-fast").textContent = fastest ? `${fastest.name} • ${fmtDurationMs(fastest.durationMs)} • ${fastest.speedPerIng.toFixed(1)}s/ing` : "—";
+  $("res-slow").textContent = slowest ? `${slowest.name} • ${fmtDurationMs(slowest.durationMs)} • ${slowest.speedPerIng.toFixed(1)}s/ing` : "—";
+  $("res-most-errors").textContent = mostErrName ? `${mostErrName} • errors: ${mostErrVal}` : "—";
+
+  const reco = [];
+  if (state.results.some(r => r.hintUses > 0)) reco.push("Reduce hints: glass+method in first 2 seconds.");
+  if (state.results.some(r => r.quality < 80)) reco.push("Accuracy: keep ±5ml and avoid extra ingredients.");
+  if (state.modeId === "sprint5") reco.push("Sprint: aim ≤30s, use +20/+10 first, then fine-tune.");
+  if (!reco.length) reco.push("Stable: optimize tab switches and transitions.");
+
+  const ul = $("res-reco");
+  ul.innerHTML = "";
+  reco.forEach(t => {
+    const li = document.createElement("li");
+    li.textContent = t;
+    ul.appendChild(li);
+  });
+
+  showScreen("screen-results");
+}
+
+/* ===== Training (fixed timer + submit flow) ===== */
+function trainingNewMetrics() {
+  return {
+    start: performance.now(),
+    firstGlassAt: null,
+    firstToolAt: null,
+    step12At: null,
+    step23At: null,
+    tabClicks: 0,
+    pourClicksTotal: 0,
+    pourClicksByAmt: { "1":0, "5":0, "10":0, "20":0 },
+    totalClicks: 0
+  };
+}
+
+function startTrainingLiveTimer() {
+  stopTrainingLiveTimer();
+  state.trainingLiveTimer = setInterval(() => {
+    if (!(state.modeId === "training" && state.trainingAttemptActive)) return;
+    const elapsed = (performance.now() - state.trainingMetrics.start) / 1000;
+    $("training-live-time").textContent = `${elapsed.toFixed(1)}s`;
+  }, 100);
+}
+
+function stopTrainingLiveTimer() {
+  if (state.trainingLiveTimer) clearInterval(state.trainingLiveTimer);
+  state.trainingLiveTimer = null;
+}
+
+function trainingStartAttempt() {
+  if (!state.trainingName) return;
+  if (state.trainingAttemptActive) return;
+
+  state.trainingAttemptActive = true;
+  state.trainingAttemptStartTs = Date.now();
+  state.trainingMetrics = trainingNewMetrics();
+
+  resetMix();
+  changeStep(1);
+
+  $("training-live-time").textContent = "0.0s";
+  $("training-live-clicks").textContent = "0";
+  $("training-live-pour").textContent = "0";
+  $("training-live-tabs").textContent = "0";
+
+  startTrainingLiveTimer();
+  // Header timer MUST show attempt time in Training:
+  startHeaderTimer(() => Date.now() - state.trainingAttemptStartTs);
+}
+
+function trainingStopAttempt() {
+  state.trainingAttemptActive = false;
+  state.trainingAttemptStartTs = 0;
+  stopTrainingLiveTimer();
+  // After attempt ends, return to general mode timer (elapsed mode time)
+  if (!state.mode.timed) {
+    state.gameStartTs = state.gameStartTs || Date.now();
+    startHeaderTimer(() => Date.now() - state.gameStartTs);
+  }
+}
+
+function trainingTrackClick(kind, payload = {}) {
+  if (state.modeId !== "training") return;
+  if (!state.trainingAttemptActive) trainingStartAttempt();
+  const m = state.trainingMetrics;
+
+  m.totalClicks += 1;
+
+  if (kind === "glass" && m.firstGlassAt === null) m.firstGlassAt = performance.now();
+  if (kind === "tool" && m.firstToolAt === null) m.firstToolAt = performance.now();
+  if (kind === "step12" && m.step12At === null) m.step12At = performance.now();
+  if (kind === "step23" && m.step23At === null) m.step23At = performance.now();
+  if (kind === "tab") m.tabClicks += 1;
+
+  if (kind === "pour") {
+    m.pourClicksTotal += 1;
+    const a = String(payload.amt);
+    if (m.pourClicksByAmt[a] !== undefined) m.pourClicksByAmt[a] += 1;
+  }
+
+  $("training-live-clicks").textContent = String(m.totalClicks);
+  $("training-live-pour").textContent = String(m.pourClicksTotal);
+  $("training-live-tabs").textContent = String(m.tabClicks);
+}
+
+function initTraining() {
+  state.trainingName = null;
+  state.trainingRepGoal = 5;
+  state.trainingRepDone = 0;
+  state.trainingBestMs = null;
+  state.trainingAttemptActive = false;
+  state.trainingAttemptStartTs = 0;
+  state.trainingMetrics = null;
+  state.trainingOpt = null;
+  stopTrainingLiveTimer();
+
+  $("training-bar").classList.add("hidden");
+  $("training-live").classList.add("hidden");
+
+  $("order-name").textContent = "Training";
+  $("score-counter").textContent = "—";
+  $("timer").textContent = "0:00";
+  // keep header timer running (mode elapsed)
+}
+
+function trainingLoadCocktail() {
+  const name = $("training-select").value;
+  state.trainingName = name;
+  state.trainingRepDone = 0;
+  state.trainingBestMs = null;
+  state.trainingOpt = computeOptimalForCocktail(name);
+
+  $("training-bar").classList.remove("hidden");
+  $("training-live").classList.remove("hidden");
+
+  $("training-name").textContent = `🍸 ${name}`;
+  $("training-progress").textContent = `Attempt: 0/${state.trainingRepGoal} • Best: —`;
+  $("training-opt").textContent = `${state.trainingOpt.optTotal} clicks`;
+
+  $("order-name").textContent = `Training: ${name}`;
+  $("score-counter").textContent = `0/${state.trainingRepGoal}`;
+
+  resetMix();
+  changeStep(1);
+}
+
+function trainingSubmit(garnishPicked) {
+  if (!state.trainingName) return;
+  if (!state.trainingAttemptActive) trainingStartAttempt();
+
+  const name = state.trainingName;
+  const target = recipes[name];
+  const durationMs = Date.now() - state.trainingAttemptStartTs;
+  const errsObj = validateBuild(target, garnishPicked);
+  const errs = errsObj.map(e => e.msg);
+  const ok = errs.length === 0;
+
+  const m = state.trainingMetrics;
+  const opt = state.trainingOpt || computeOptimalForCocktail(name);
+
+  const ingCount = Object.keys(target.ing).length;
+  const speedPerIng = durationMs / 1000 / Math.max(1, ingCount);
+  const quality = computeQuality(errsObj);
+
+  const tips = [];
+  if (m.firstGlassAt) {
+    const t = (m.firstGlassAt - m.start) / 1000;
+    if (t > 2) tips.push(`Glass: ${t.toFixed(1)}s → ≤2.0s`);
+  }
+  if (m.firstToolAt) {
+    const t = (m.firstToolAt - m.start) / 1000;
+    if (t > 2) tips.push(`Method: ${t.toFixed(1)}s → ≤2.0s`);
+  }
+  const overClicks = m.totalClicks - opt.optTotal;
+  if (overClicks >= 4) tips.push(`Clicks: ${m.totalClicks} vs ${opt.optTotal}`);
+  const small = m.pourClicksByAmt["1"] + m.pourClicksByAmt["5"];
+  const ratio = m.pourClicksTotal ? (small / m.pourClicksTotal) : 0;
+  if (ratio > 0.5 && m.pourClicksTotal >= 8) tips.push(`Small pours: ${(ratio*100).toFixed(0)}%`);
+  const tipLine = tips.slice(0,3).join(" | ");
+
+  appendFeedbackCard({
+    title: `🧩 ${name}`,
+    ok,
+    hintUses: getHintUses(name),
+    lines: [
+      `⏱ ${fmtDurationMs(durationMs)} • ${speedPerIng.toFixed(1)}s/ing • Quality: ${quality}%`,
+      `🖱 ${m.totalClicks}/${opt.optTotal} • 🍶 ${m.pourClicksTotal}/${opt.optPour} • 📑 ${m.tabClicks}/${opt.optTabs}` + (tipLine ? ` • 👉 ${tipLine}` : "")
+    ],
+    errors: errs.length ? errs : null
+  });
+
+  state.trainingRepDone += 1;
+  state.trainingBestMs = (state.trainingBestMs == null) ? durationMs : Math.min(state.trainingBestMs, durationMs);
+  $("training-progress").textContent = `Attempt: ${state.trainingRepDone}/${state.trainingRepGoal} • Best: ${fmtDurationMs(state.trainingBestMs)}`;
+  $("score-counter").textContent = `${Math.min(state.trainingRepDone, state.trainingRepGoal)}/${state.trainingRepGoal}`;
+
+  state.results.push({ name, durationMs, speedPerIng, quality, errors: errs, hintUses: getHintUses(name) });
+
+  trainingStopAttempt();
+  resetMix();
+  changeStep(1);
+}
+
+/* ===== Memory ===== */
+function initMemory(allNames) {
+  const total = MEMORY_ROUNDS * MEMORY_PER_ROUND;
+  state.memoryQueue = shuffle([...allNames]).slice(0, total);
+  state.memoryActiveKey = null;
+
+  $("memory-hint").textContent = `Memorize ${total} names (2.5s each). Then: build + type name + serve.`;
+  $("order-name").textContent = "Memory";
+  $("score-counter").textContent = `0/${total}`;
+
+  const h = $("hint-box");
+  h.style.display = "none";
+
+  let idx = 0;
+  const reveal = () => {
+    if (idx >= total) {
+      h.style.display = "none";
+      state.gameStartTs = Date.now();
+      startHeaderTimer(() => Date.now() - state.gameStartTs);
+      $("memory-hint").textContent = "Type cocktail name to select order.";
+      return;
     }
+    const name = state.memoryQueue[idx];
+    h.textContent = `MEMORY\n\n${name}`;
+    h.style.display = "block";
+    idx += 1;
+    setTimeout(() => {
+      h.style.display = "none";
+      setTimeout(reveal, 200);
+    }, MEMORY_REVEAL_MS);
+  };
+  reveal();
+}
 
-    function submitCocktail(garnish) {
-        const target = recipes[state.orders[state.currentIdx]];
-        const build = state.build;
-        let errors = [];
+function memoryConfirmName() {
+  const txt = ($("memory-input").value || "").trim();
+  const normalized = txt.toLowerCase();
+  const found = state.memoryQueue.find(n => n.toLowerCase() === normalized);
 
-        if(build.glass !== target.glass) errors.push(`Бокал (нужен ${target.glass})`);
-        if(build.tool !== target.tool) errors.push(`Метод (нужен ${target.tool})`);
-        if(!target.g.includes(garnish)) errors.push(`Гарнир (нужен ${target.g[0]})`);
+  if (!found) {
+    $("memory-hint").textContent = "Not found in your list. Check spelling.";
+    return;
+  }
+  state.memoryActiveKey = found;
+  $("order-name").textContent = `Memory: ${found}`;
+  state.orderStartTs = Date.now();
+  resetMix();
+  changeStep(1);
+  $("memory-hint").textContent = "Serve: pick garnish.";
+}
 
-        for(let [ing, val] of Object.entries(target.ing)) {
-            if((build.ing[ing] || 0) !== val) errors.push(`${ing}: ${build.ing[ing]||0}/${val}ml`);
-        }
+function memoryForgotList() {
+  const h = $("hint-box");
+  h.textContent = "YOUR LIST:\n\n" + state.memoryQueue.join("\n");
+  h.style.display = "block";
+}
 
-        const feedbackEl = document.getElementById('live-feedback');
-        if(errors.length === 0) {
-            state.score++;
-            feedbackEl.innerHTML = `<div class="success-text">✅ ${state.orders[state.currentIdx]}: ИДЕАЛЬНО!</div>`;
-        } else {
-            feedbackEl.innerHTML = `<div style="color:#f472b6; font-weight:bold; margin-bottom:5px">❌ ${state.orders[state.currentIdx]}:</div>` + 
-                                   errors.map(e => `<div class="err-text">• ${e}</div>`).join('');
-        }
+function memoryLeft() {
+  const done = state.results.length;
+  const total = MEMORY_ROUNDS * MEMORY_PER_ROUND;
+  $("memory-hint").textContent = `Done: ${done}/${total} • Left: ${Math.max(0, total - done)}`;
+}
 
-        state.history.push({ name: state.orders[state.currentIdx], ok: errors.length === 0, errs: errors });
-        state.currentIdx++;
+function memorySubmit(garnishPicked) {
+  if (!state.memoryActiveKey) {
+    $("memory-hint").textContent = "Type a name and click “Select order” first.";
+    return;
+  }
+  const name = state.memoryActiveKey;
+  const target = recipes[name];
 
-        if(state.currentIdx >= state.orders.length) finishGame("Меню выполнено!");
-        else loadNextOrder();
+  const durationMs = Date.now() - state.orderStartTs;
+  const errsObj = validateBuild(target, garnishPicked);
+  const errs = errsObj.map(e => e.msg);
+  const ok = errs.length === 0;
+
+  const ingCount = Object.keys(target.ing).length;
+  const speedPerIng = durationMs / 1000 / Math.max(1, ingCount);
+  const quality = computeQuality(errsObj);
+
+  appendFeedbackCard({
+    title: `🧠 ${name}`,
+    ok,
+    hintUses: getHintUses(name),
+    lines: [`⏱ ${fmtDurationMs(durationMs)} • ${speedPerIng.toFixed(1)}s/ing • Quality: ${quality}%`],
+    errors: errs.length ? errs : null
+  });
+
+  state.results.push({ name, durationMs, speedPerIng, quality, errors: errs, hintUses: getHintUses(name) });
+  if (ok) state.score += 1;
+
+  state.memoryQueue = state.memoryQueue.filter(n => n !== name);
+  state.memoryActiveKey = null;
+  $("memory-input").value = "";
+
+  const total = MEMORY_ROUNDS * MEMORY_PER_ROUND;
+  $("score-counter").textContent = `${state.score}/${total}`;
+
+  if (state.results.length >= total) return finishGame("Memory completed");
+  $("order-name").textContent = "Memory";
+  $("memory-hint").textContent = "Next: type the cocktail name.";
+}
+
+/* ===== Game submit flow (fixed: always works) ===== */
+function submitCocktail(garnishPicked) {
+  if (state.finished) return;
+
+  if (state.modeId === "training") return trainingSubmit(garnishPicked);
+  if (state.modeId === "memory") return memorySubmit(garnishPicked);
+
+  const name = $("order-name").textContent;
+  const target = recipes[name];
+  if (!target) return;
+
+  const durationMs = Date.now() - state.orderStartTs;
+  const errsObj = validateBuild(target, garnishPicked);
+  const errs = errsObj.map(e => e.msg);
+  const ok = errs.length === 0;
+
+  let quality = computeQuality(errsObj);
+  quality = applySprintTimePenalty(quality, durationMs);
+
+  const ingCount = Object.keys(target.ing).length;
+  const speedPerIng = durationMs / 1000 / Math.max(1, ingCount);
+
+  appendFeedbackCard({
+    title: `🍸 ${name}`,
+    ok,
+    hintUses: getHintUses(name),
+    lines: [`⏱ ${fmtDurationMs(durationMs)} • ${speedPerIng.toFixed(1)}s/ing • Quality: ${quality}%`],
+    errors: errs.length ? errs : null
+  });
+
+  state.results.push({ name, durationMs, speedPerIng, quality, errors: errs, hintUses: getHintUses(name) });
+  if (ok) state.score += 1;
+
+  if (state.modeId === "exam" && !ok) return finishGame("EXAM failed (1 mistake)");
+
+  if (state.modeId === "sprint5") {
+    $("score-counter").textContent = String(state.score);
+    return loadNextOrder();
+  }
+
+  state.currentIdx += 1;
+  $("score-counter").textContent = `${state.score}/${state.orders.length}`;
+  if (state.currentIdx >= state.orders.length) return finishGame("All done!");
+  loadNextOrder();
+}
+
+/* ===== Events (single delegation) ===== */
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+  const action = btn.dataset.action;
+
+  if (action === "start") return startGame(btn.dataset.mode);
+  if (action === "toggle-music") return toggleMusic();
+  if (action === "toggle-hint") return toggleHint();
+  if (action === "reset-mix") return resetMix();
+
+  if (action === "step") {
+    const step = Number(btn.dataset.step);
+    if (step === 2 && $("btn-step-2").disabled) return;
+    if (state.modeId === "training") {
+      trainingTrackClick(step === 2 ? "step12" : "step23");
     }
+    return changeStep(step);
+  }
 
-    function finishGame(reason) {
-        clearInterval(state.interval);
-        const finalTime = document.getElementById('timer').innerText;
-        let report = `ИТОГИ СЕССИИ\n\n${reason}\nРезультат: ${state.score} из ${state.currentIdx}\nВремя: ${finalTime}\n\n`;
-        
-        state.history.forEach(h => {
-            report += `${h.ok ? '✅' : '❌'} ${h.name}\n${h.errs.length ? '    ' + h.errs.join(', ') + '\n' : ''}`;
-        });
-        
-        alert(report);
-        location.reload();
-    }
+  if (action === "tab") {
+    const cat = btn.dataset.cat;
+    $("tabs-bar").querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    if (state.modeId === "training") trainingTrackClick("tab");
+    return renderBottles(cat);
+  }
 
-    function selectAttr(k, v, el) {
-        state.build[k] = v;
-        el.parentNode.querySelectorAll('.select-btn').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
-    }
+  if (action === "select-attr") {
+    if (state.modeId === "training") trainingTrackClick(btn.dataset.key === "glass" ? "glass" : "tool");
+    return selectAttr(btn.dataset.key, btn.dataset.value, btn);
+  }
 
-    function addIng(n, v) {
-        state.build.ing[n] = (state.build.ing[n] || 0) + v;
-        document.getElementById('current-mix').innerText = Object.entries(state.build.ing).map(([i, vol]) => `${i}(${vol})`).join(', ');
-    }
+  if (action === "pour") {
+    if (state.modeId === "training") trainingTrackClick("pour", { amt: btn.dataset.amt });
+    return addIng(btn.dataset.ing, Number(btn.dataset.amt));
+  }
 
-    function renderBottles(cat) {
-        document.getElementById('bottles-grid').innerHTML = ingredients[cat].map(ing => `
-            <div class="bottle-card">
-                <div style="font-size:9px; height:20px; overflow:hidden">${ing}</div>
-                <button class="pour-btn" onclick="addIng('${ing}', 10)">+10</button>
-                <button class="pour-btn" onclick="addIng('${ing}', 20)">+20</button>
-                <button class="pour-btn" onclick="addIng('${ing}', 5)">+5</button>
-            </div>
-        `).join('');
-    }
+  if (action === "submit") {
+    if (state.modeId === "training") trainingTrackClick("garnish");
+    return submitCocktail(btn.dataset.garnish);
+  }
 
-    function changeStep(s) {
-        [1,2,3].forEach(n => document.getElementById('step-'+n).classList.add('hidden'));
-        document.getElementById('step-'+s).classList.remove('hidden');
-    }
+  if (action === "training-load") return trainingLoadCocktail();
+  if (action === "training-start") return trainingStartAttempt();
+  if (action === "training-reset") {
+    // Stop attempt without breaking submit flow
+    if (state.trainingAttemptActive) trainingStopAttempt();
+    resetMix();
+    changeStep(1);
+    return;
+  }
 
-    function resetMix() {
-        state.build = { ing: {}, glass: '', tool: '' };
-        document.getElementById('current-mix').innerText = "Пусто";
-        document.querySelectorAll('.select-btn').forEach(b => b.classList.remove('active'));
-    }
+  if (action === "memory-confirm") return memoryConfirmName();
+  if (action === "memory-forgot") return memoryForgotList();
+  if (action === "memory-left") return memoryLeft();
 
-    function toggleHint() {
-        const h = document.getElementById('hint-box');
-        h.style.display = h.style.display === 'block' ? 'none' : 'block';
-    }
+  if (action === "back-menu") {
+    if (state.interval) clearInterval(state.interval);
+    stopHeaderTimer();
+    state.finished = true;
+    $("hint-box").style.display = "none";
+    return showScreen("screen-menu");
+  }
+  if (action === "restart") {
+    if (!state.lastModeId) return showScreen("screen-menu");
+    return startGame(state.lastModeId);
+  }
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") $("hint-box").style.display = "none";
+});
+
+/* Boot */
+dataIntegrityCheckAndFix();
+auditData();   // comment out if you don't want console logs
+renderStaticUI();
 </script>
 </body>
 </html>
