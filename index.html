@@ -543,8 +543,53 @@ const recipes = {
   "Sidecar": { ing: { "Cognac": 50, "Triple Sec": 20, "Lemon Juice": 20 }, glass: "Coupe", tool: "Shake", garnishes: ["Sugar rim", "Lemon twist"] },
 
   "Adventure": { ing: { "Gin": 45, "Maraschino": 15, "Grenadine": 10, "Lemon Juice": 15 }, glass: "Coupe", tool: "Shake", garnishes: ["Maraschino cherry"] },
-  "Affinity": { ing: { "Scotch Whisky": 50, "Dry Vermouth": 25, "Sweet Vermouth": 15, "Orange Bitters": 2 }, glass: "Coupe", tool: "Stir", garnishes: ["Lemon twist"] },
-  "Alabama Slammer": { ing: { "Southern Comfort": 25, "Amaretto": 25, "Soda": 50, "Grenadine": 5 }, glass: "Highball", tool: "Build", garnishes: ["Orange slice"] },
+  "Affinity": {
+  ing: {
+    "Scotch Whisky": 50,
+    "Dry Vermouth": 25,
+    "Sweet Vermouth": 15,
+    "Orange Bitters": 2
+  },
+  glass: "Coupe",
+  tool: "Stir",
+  garnishes: ["Lemon twist"],
+
+  iba: {
+    status: "active",          // active | removed | never
+    category: "Contemporary Classics"
+  },
+
+  hint: {
+    memory: "Affinity ≈ Infinity (∞): whisky + dry + sweet. Think Rob Roy with two vermouths.",
+    story: "Affinity belongs to the Manhattan / Rob Roy family, but uses both dry and sweet vermouth for balance.",
+    sequence: "Glass → Whisky → Dry Vermouth → Sweet Vermouth → Bitters → Stir → Strain → Lemon twist.",
+    speed: "Pour both vermouths back-to-back. Bitters last. Stir only.",
+    commonMistakes: "Turning it into Rob Roy (only sweet vermouth). Forgetting bitters."
+  }
+},
+  "Alabama Slammer": {
+  ing: {
+    "Southern Comfort": 25,
+    "Amaretto": 25,
+    "Sloe Gin": 25,
+    "Orange Juice": 120
+  },
+  glass: "Highball",
+  tool: "Build",
+  garnishes: ["None"],
+
+  iba: {
+    status: "removed",
+    category: "New Era",
+    note: "Removed from IBA list (pre-2020)"
+  },
+
+  hint: {
+    memory: "Old IBA = SoCo + Amaretto + Sloe Gin + OJ.",
+    story: "Originally listed by IBA, later removed as a party-style drink.",
+    commonMistakes: "Modern bar versions with soda or grenadine are not IBA."
+  }
+},
   "Amaretto Sour": { ing: { "Amaretto": 45, "Lemon Juice": 25, "Egg White": 1, "Soda": 30 }, glass: "Rocks", tool: "Shake, top", garnishes: ["Cherry"] },
   "Angel Face": { ing: { "Gin": 30, "Calvados": 30, "Apricot Brandy": 30 }, glass: "Coupe", tool: "Stir", garnishes: ["Orange twist"] },
   "Aviation": { ing: { "Gin": 45, "Maraschino": 10, "Lemon Juice": 15, "Creme de Violette": 10 }, glass: "Coupe", tool: "Shake", garnishes: ["Maraschino cherry"] },
@@ -1005,6 +1050,16 @@ function buildHintText(name) {
   lines.push(`\nGlass: ${r.glass}`);
   lines.push(`Method: ${r.tool}`);
   lines.push(`Garnish: ${r.garnishes.join(" or ")}`);
+
+  // ===== Extended hint blocks =====
+  if (r.hint) {
+    if (r.hint.memory) lines.push(`\n🧠 MEMORY:\n${r.hint.memory}`);
+    if (r.hint.story) lines.push(`\n📚 STORY:\n${r.hint.story}`);
+    if (r.hint.sequence) lines.push(`\n⚙️ SEQUENCE:\n${r.hint.sequence}`);
+    if (r.hint.speed) lines.push(`\n⚡ SPEED TIP:\n${r.hint.speed}`);
+    if (r.hint.commonMistakes) lines.push(`\n❗ COMMON MISTAKES:\n${r.hint.commonMistakes}`);
+  }
+
   return lines.join("\n");
 }
 
