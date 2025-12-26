@@ -174,6 +174,27 @@
       .results-grid { grid-template-columns: 1fr; }
       .stat-order { max-width: 62vw; }
     }
+
+    .learned-toast {
+      position: fixed;
+      top: 18%;
+      left: 50%;
+      transform: translateX(-50%) scale(0.9);
+      background: rgba(16,185,129,0.95);
+      color: #000;
+      font-weight: 900;
+      padding: 10px 18px;
+      border-radius: 999px;
+      box-shadow: 0 0 25px rgba(16,185,129,0.8);
+      z-index: 3000;
+      opacity: 0;
+      transition: all 0.25s ease;
+    }
+
+    .learned-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) scale(1);
+    }
   </style>
 </head>
 
@@ -233,7 +254,7 @@
           <div id="training-live" class="card hidden">
             <div class="attempt-row">
               <span class="pill">⏱ <b id="training-live-time">0.0s</b></span>
-             <span class="pill">🎯 <b id="training-live-gap">—</b></span>
+              <span class="pill">🎯 <b id="training-live-gap">—</b></span>
               <span class="pill">🖱 <b id="training-live-clicks">0</b></span>
               <span class="pill">🍶 <b id="training-live-pour">0</b></span>
               <span class="pill">📑 <b id="training-live-tabs">0</b></span>
@@ -325,6 +346,9 @@
 
 <div id="hint-box" class="hint-overlay"></div>
 
+<!-- ✅ ВАЖНО: тост должен быть в BODY, а не внутри <script> -->
+<div id="learned-toast" class="learned-toast hidden">🏆 Learned!</div>
+
 <div class="controls-footer">
   <button class="float-btn" data-action="toggle-hint" id="hint-btn">💡</button>
   <button class="float-btn" data-action="toggle-music">🎵</button>
@@ -346,21 +370,85 @@ function saveStorage(data) {
 
 const storage = loadStorage();
 
+function playFanfare() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+
+    const ctx = new Ctx();
+
+    if (ctx.state === "suspended") ctx.resume();
+
+    const now = ctx.currentTime;
+    const master = ctx.createGain();
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.exponentialRampToValueAtTime(0.25, now + 0.02);
+    master.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
+    master.connect(ctx.destination);
+
+    const notes = [523.25, 659.25, 783.99, 1046.5];
+    notes.forEach((freq, i) => {
+      const t0 = now + i * 0.12;
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+
+      osc.type = "square";
+      osc.frequency.setValueAtTime(freq, t0);
+
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.18, t0 + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.11);
+
+      osc.connect(g);
+      g.connect(master);
+
+      osc.start(t0);
+      osc.stop(t0 + 0.12);
+    });
+
+    setTimeout(() => ctx.close?.(), 1200);
+  } catch (_) {}
+}
+
+function showLearnedPopup(name) {
+  const el = document.getElementById("learned-toast");
+  if (!el) return;
+
+  el.textContent = `🏆 Learned: ${name}`;
+  el.classList.remove("hidden");
+
+  el.classList.remove("show");
+  void el.offsetWidth;
+  el.classList.add("show");
+
+  setTimeout(() => {
+    el.classList.remove("show");
+    setTimeout(() => el.classList.add("hidden"), 300);
+  }, 1800);
+}
+
 function goalMsByIngredients(ingredientCount) {
-  return Math.max(1, ingredientCount) * 4 * 1000; // 4s per ingredient
+  return Math.max(1, ingredientCount) * 5500; // 5.5s per ingredient
 }
 
 function saveAttemptResult(cocktailName, durationMs, ingredientCount) {
   const goalMs = goalMsByIngredients(ingredientCount);
-  const prev = storage.best[cocktailName] || { bestTimeMs: null, attemptsMs: [] };
+  const prev = storage.best[cocktailName] || {
+    bestTimeMs: null,
+    attemptsMs: [],
+    learned: false,
+    avgLast5Ms: null,
+    goalMs: null
+  };
 
-  // attempts: keep only last 5
   const attempts = Array.isArray(prev.attemptsMs) ? prev.attemptsMs.slice() : [];
   attempts.push(durationMs);
   const last5 = attempts.slice(-5);
 
   const avgLast5Ms = last5.reduce((a,b)=>a+b, 0) / Math.max(1, last5.length);
   const learned = avgLast5Ms <= goalMs;
+
+  const becameLearned = !prev.learned && learned;
 
   const bestTimeMs = (prev.bestTimeMs == null) ? durationMs : Math.min(prev.bestTimeMs, durationMs);
 
@@ -373,6 +461,11 @@ function saveAttemptResult(cocktailName, durationMs, ingredientCount) {
   };
 
   saveStorage(storage);
+
+  if (becameLearned) {
+    playFanfare();
+    showLearnedPopup(cocktailName);
+  }
 }
 
 function getCocktailProgress(name) {
@@ -386,8 +479,8 @@ function getCocktailProgress(name) {
     attemptsCount: attempts.length,
     goalMs: p.goalMs ?? null
   };
-}// training select
-    
+} // training select
+
 /** Settings */
 const VOLUME_TOLERANCE_ML = 5;
 const SPRINT_SECONDS = 300;
@@ -456,7 +549,7 @@ const ui = {
  * - dash/tsp/egg/piece/rinse: uses +1 only
  */
 const ingredientMeta = {
-    
+
   "Egg White": { unit: "egg" },
   "Egg Yolk": { unit: "egg" },
   "Lime": { unit: "piece" },
@@ -470,7 +563,7 @@ const ingredientMeta = {
 
   "Absinthe (rinse)": { unit: "rinse" }
 };
-    
+
 const INGREDIENT_ALIASES = {
   "Kahlua": "Coffee Liqueur",
   "Cointreau": "Triple Sec",
@@ -913,8 +1006,8 @@ function renderStaticUI() {
   renderBottles(tabs[0]);
   updateStep2Lock();
 
-   // training select
-    const sel = $("training-select");
+  // training select
+  const sel = $("training-select");
   sel.innerHTML = Object.keys(recipes)
     .sort((a,b)=>a.localeCompare(b))
     .map(n => {
@@ -930,7 +1023,6 @@ function renderStaticUI() {
     })
     .join("");
 }
-
 
 function renderBottles(cat) {
   const list = (ingredients[cat] || []);
@@ -1344,7 +1436,6 @@ function trainingStartAttempt() {
   $("training-live-tabs").textContent = "0";
 
   startTrainingLiveTimer();
-  // Header timer MUST show attempt time in Training:
   startHeaderTimer(() => Date.now() - state.trainingAttemptStartTs);
 }
 
@@ -1352,7 +1443,6 @@ function trainingStopAttempt() {
   state.trainingAttemptActive = false;
   state.trainingAttemptStartTs = 0;
   stopTrainingLiveTimer();
-  // After attempt ends, return to general mode timer (elapsed mode time)
   if (!state.mode.timed) {
     state.gameStartTs = state.gameStartTs || Date.now();
     startHeaderTimer(() => Date.now() - state.gameStartTs);
@@ -1400,7 +1490,6 @@ function initTraining() {
   $("order-name").textContent = "Training";
   $("score-counter").textContent = "—";
   $("timer").textContent = "0:00";
-  // keep header timer running (mode elapsed)
 }
 
 function trainingLoadCocktail() {
@@ -1409,7 +1498,8 @@ function trainingLoadCocktail() {
   state.trainingRepDone = 0;
   state.trainingBestMs = null;
   state.trainingOpt = computeOptimalForCocktail(name);
-    const ingCount = Object.keys(recipes[name].ing).length;
+
+  const ingCount = Object.keys(recipes[name].ing).length;
   const goalMs = goalMsByIngredients(ingCount);
   $("training-goal").textContent = `${Math.round(goalMs/1000)}s`;
 
@@ -1418,11 +1508,10 @@ function trainingLoadCocktail() {
   const avgTxt = p && p.avgLast5Ms != null ? `${(p.avgLast5Ms/1000).toFixed(1)}s` : "—";
   $("training-progress").textContent = `Avg(5): ${avgTxt} / Goal: ${(goalMs/1000).toFixed(0)}s • ${statusIcon}`;
 
-$("training-bar").classList.remove("hidden");
-$("training-live").classList.remove("hidden");
+  $("training-bar").classList.remove("hidden");
+  $("training-live").classList.remove("hidden");
 
-$("training-name").textContent = `🍸 ${name}`;
-// training-progress НЕ перезаписываем тут второй раз — он уже выставлен выше (Avg/Goal)
+  $("training-name").textContent = `🍸 ${name}`;
   $("training-opt").textContent = `${state.trainingOpt.optTotal} clicks`;
 
   $("order-name").textContent = `Training: ${name}`;
@@ -1449,16 +1538,15 @@ function trainingSubmit(garnishPicked) {
   const ingCount = Object.keys(target.ing).length;
   const speedPerIng = durationMs / 1000 / Math.max(1, ingCount);
   const quality = computeQuality(errsObj);
- saveAttemptResult(name, durationMs, ingCount);
- renderStaticUI(); // обновит иконки 🆕/⏳/🏆 в селекте
-    const goalMs = goalMsByIngredients(ingCount);
+
+  saveAttemptResult(name, durationMs, ingCount);
+  renderStaticUI();
+
+  const goalMs = goalMsByIngredients(ingCount);
   const p = getCocktailProgress(name);
   const statusIcon = p && p.learned ? "🏆" : "⏳";
   const avgTxt = p && p.avgLast5Ms != null ? `${(p.avgLast5Ms/1000).toFixed(1)}s` : "—";
   $("training-progress").textContent = `Avg(5): ${avgTxt} / Goal: ${(goalMs/1000).toFixed(0)}s • ${statusIcon}`;
-    
-
-
 
   const tips = [];
   if (m.firstGlassAt) {
@@ -1623,11 +1711,9 @@ function submitCocktail(garnishPicked) {
 
   const ingCount = Object.keys(target.ing).length;
   const speedPerIng = durationMs / 1000 / Math.max(1, ingCount);
-  saveAttemptResult(name, durationMs, ingCount);
-renderStaticUI();
-    saveAttemptResult(name, durationMs, ingCount);
-renderStaticUI();
 
+  // ✅ ВАЖНО: фикс — используем ГЛОБАЛЬНУЮ saveAttemptResult (без дубля внутри submitCocktail)
+  saveAttemptResult(name, durationMs, ingCount);
 
   appendFeedbackCard({
     title: `🍸 ${name}`,
@@ -1699,7 +1785,6 @@ document.addEventListener("click", (e) => {
   if (action === "training-load") return trainingLoadCocktail();
   if (action === "training-start") return trainingStartAttempt();
   if (action === "training-reset") {
-    // Stop attempt without breaking submit flow
     if (state.trainingAttemptActive) trainingStopAttempt();
     resetMix();
     changeStep(1);
